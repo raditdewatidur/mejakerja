@@ -436,6 +436,26 @@ details.help .in{padding:0 15px 15px}
     <button class="btn ghost" data-close="scrim-ocr">Batal</button>
   </div></div></div>
 
+<div class="scrim" id="scrim-kirim"><div class="sheet" style="max-width:640px">
+  <h2>Kirim testi</h2>
+  <p class="lede" style="margin-bottom:14px">Pilih apa saja yang ikut. Teksnya masih bisa kamu sunting sebelum dikirim.</p>
+  <div class="row" style="gap:0 18px;margin-bottom:14px">
+    <label class="opt" style="margin-bottom:0"><input type="checkbox" id="k-label" checked>Label</label>
+    <label class="opt" style="margin-bottom:0"><input type="checkbox" id="k-ket" checked>Keterangan</label>
+    <label class="opt" style="margin-bottom:0"><input type="checkbox" id="k-media">Gambar</label>
+    <label class="opt" style="margin-bottom:0"><input type="checkbox" id="k-link">Link Drive</label>
+  </div>
+  <div id="k-catatan" class="hint" style="margin-top:-6px"></div>
+  <label><span class="l">Teks yang dikirim</span><textarea id="k-teks" rows="8"></textarea></label>
+  <div id="k-pratinjau" style="margin-bottom:14px"></div>
+  <div class="sheet-actions">
+    <button class="btn primary" id="k-share">Bagikan…</button>
+    <button class="btn" id="k-wa">WhatsApp</button>
+    <button class="btn" id="k-salin">Salin teks</button>
+    <span class="spacer"></span>
+    <button class="btn ghost" data-close="scrim-kirim">Tutup</button>
+  </div></div></div>
+
 <div class="lightbox" id="lightbox"><div id="lightbox-isi"></div></div>
 <div class="toast" id="toast"></div>
 <input type="file" id="file-import" accept="application/json" hidden>
@@ -812,21 +832,10 @@ function pasangBlok(el,t){
 
   const teksTesti=()=>{
     const a=tanpaHash(t.label), b=tanpaHash(t.keterangan);
-    let s=a+(b?'\n\n'+b:'');
-    if(isVideo(t)&&t.driveId) s+=(s?'\n\n':'')+linkDrive(t.driveId);
-    return s;
+    return rapikan(a+(b?'\n\n'+b:''),SIAP_KIRIM);
   };
-  el.querySelector('[data-a=wa]').onclick=()=>kirimWA(rapikan(teksTesti(),SIAP_KIRIM));
-  el.querySelector('[data-a=salin]').onclick=()=>salinPolos(rapikan(teksTesti(),SIAP_KIRIM));
-  el.querySelector('[data-a=share]').onclick=async()=>{
-    const src=await idbGet(t.id);
-    let berkas=null;
-    if(src){
-      if(typeof src==='string') berkas=dataURLkeFile(src,'testi.jpg');
-      else berkas=new File([src],'testi'+ekstensi(t.mime),{type:t.mime||src.type||'video/mp4'});
-    }
-    bagikan(teksTesti(),berkas,t.label);
-  };
+  el.querySelector('[data-a=kirim]').onclick=()=>bukaKirim(t);
+  el.querySelector('[data-a=salin]').onclick=()=>salinPolos(teksTesti());
   el.querySelector('[data-a=ganti]').onclick=()=>{ gantiUntuk=t.id; $('#file-images').click(); };
   const tOcr=el.querySelector('[data-a=ocr]');
   if(tOcr) tOcr.onclick=()=>ocrSatu(t);
@@ -871,9 +880,8 @@ function renderTesti(){
       +'<div class="ket" contenteditable="plaintext-only" data-f="keterangan" data-ph="Keterangan singkat, pakai #tag biar gampang dicari"></div>'
       +'<div class="hashbar"></div>'
       +'<div class="blok-act">'
-      +'<button class="btn sm" data-a="wa">WhatsApp</button>'
-      +'<button class="btn sm" data-a="share">Bagikan</button>'
-      +'<button class="btn sm" data-a="salin">Salin label</button>'
+      +'<button class="btn sm" data-a="kirim">Kirim</button>'
+      +'<button class="btn sm" data-a="salin">Salin teks</button>'
       +((adaMedia(t)&&!isVideo(t))?'<button class="btn sm" data-a="ocr">OCR</button>':'')
       +'<button class="btn sm" data-a="ganti">Ganti gambar</button>'
       +'<span class="spacer"></span>'
@@ -1154,6 +1162,71 @@ function renderScript(){
     isi.onclick=()=>{ isi.classList.toggle('open'); const f=isi.querySelector('.fade'); if(f) f.style.display=isi.classList.contains('open')?'none':'block'; };
   });
 }
+
+/* ===================== PANEL KIRIM ===================== */
+let kirimTarget=null, kirimBerkas=null;
+
+function bukaKirim(t){
+  kirimTarget=t; kirimBerkas=null;
+  const p=DB.settings.kirim||{label:true,ket:true,media:true,link:false};
+  const punyaBerkas=lokalAda(t.id);
+  const punyaLink=!!t.driveId;
+
+  $('#k-label').checked=p.label!==false;
+  $('#k-ket').checked=p.ket!==false && !!String(t.keterangan||'').trim();
+  $('#k-ket').disabled=!String(t.keterangan||'').trim();
+  $('#k-media').checked=punyaBerkas && p.media!==false;
+  $('#k-media').disabled=!punyaBerkas;
+  $('#k-link').checked=punyaLink && (p.link===true || (!punyaBerkas && isVideo(t)));
+  $('#k-link').disabled=!punyaLink;
+
+  $('#scrim-kirim').classList.add('on');
+  susunKirim();
+
+  if(punyaBerkas) idbGet(t.id).then(src=>{
+    if(!src) return;
+    kirimBerkas = (typeof src==='string')
+      ? dataURLkeFile(src,'testi'+ekstensi(t.mime||'image/jpeg'))
+      : new File([src],'testi'+ekstensi(t.mime||src.type),{type:t.mime||src.type||'video/mp4'});
+    susunKirim();
+  });
+}
+function susunKirim(){
+  const t=kirimTarget; if(!t) return;
+  const bagian=[];
+  if($('#k-label').checked)  bagian.push(tanpaHash(t.label));
+  if($('#k-ket').checked)    bagian.push(tanpaHash(t.keterangan));
+  if($('#k-link').checked && t.driveId) bagian.push(linkDrive(t.driveId));
+  $('#k-teks').value=rapikan(bagian.filter(x=>x&&x.trim()).join('\n\n'),SIAP_KIRIM);
+
+  const ikut=$('#k-media').checked && kirimBerkas;
+  $('#k-pratinjau').innerHTML = ikut
+    ? '<div class="row" style="gap:9px"><span class="tag">'+esc(isVideo(t)?'Video':'Gambar')+'</span>'
+      +'<span class="hint" style="margin:0">'+(kirimBerkas.size/1048576).toFixed(1)+' MB ikut terkirim</span></div>'
+    : '';
+
+  let catatan='';
+  if(!lokalAda(t.id)&&adaMedia(t)) catatan='Berkasnya tidak ada di perangkat ini, jadi hanya link Drive yang bisa ikut.';
+  else if($('#k-media').checked) catatan='WhatsApp lewat tombol di bawah tidak bisa membawa berkas. Pakai Bagikan supaya gambarnya ikut.';
+  $('#k-catatan').textContent=catatan;
+}
+function simpanPilihanKirim(){
+  DB.settings.kirim={label:$('#k-label').checked,ket:$('#k-ket').checked,
+                     media:$('#k-media').checked,link:$('#k-link').checked};
+  tulis(DB);
+}
+['#k-label','#k-ket','#k-media','#k-link'].forEach(s=>$(s).addEventListener('change',()=>{
+  susunKirim(); simpanPilihanKirim();
+}));
+$('#k-salin').onclick=()=>salinPolos($('#k-teks').value);
+$('#k-wa').onclick=()=>{
+  if($('#k-media').checked&&kirimBerkas) toast('Gambarnya tidak ikut lewat jalur ini. Pakai Bagikan kalau mau ikut.');
+  kirimWA($('#k-teks').value);
+};
+$('#k-share').onclick=()=>{
+  const berkas=($('#k-media').checked&&kirimBerkas)?kirimBerkas:null;
+  bagikan($('#k-teks').value,berkas,kirimTarget&&kirimTarget.label);
+};
 
 /* ===================== OCR ===================== */
 const BUANG=[/^online$/i,/^mengetik/i,/^ketik pesan/i,/^tulis pesan/i,/^hari ini$/i,/^kemarin$/i,
