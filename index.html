@@ -138,6 +138,9 @@ textarea{resize:vertical;min-height:96px;line-height:1.6}
 .opt input{accent-color:var(--brass);width:15px;height:15px}
 .opt:hover{color:var(--text)}
 .preview{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px;font-family:var(--mono);font-size:12.5px;line-height:1.7;white-space:pre-wrap;max-height:340px;overflow:auto}
+.grup{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--brass);
+  margin:26px 0 9px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.grup.awal{margin-top:0}
 .pilcrow{color:var(--clay);opacity:.75}
 .brk{color:var(--dimmer)}
 .pilih-bar{position:sticky;top:58px;z-index:19;display:flex;gap:8px;align-items:center;flex-wrap:wrap;
@@ -270,7 +273,7 @@ details.help .in{padding:0 15px 15px}
         <p class="lede">Tulis sendiri, tandai statusnya, buka teleprompter atau salin dengan enter yang benar-benar enter.</p>
         <div class="row" style="margin-bottom:16px">
           <button class="btn sm" id="impor-md">Impor dari Markdown</button>
-          <button class="btn sm" id="script-urut">Urut: nomor</button>
+          <button class="btn sm" id="script-urut">Urut: seri &amp; nomor</button>
           <span class="spacer"></span>
           <button class="btn sm" id="pilih-script">Pilih</button>
         </div>
@@ -718,6 +721,7 @@ async function tarikDariSheet(){
       });
     });
     DB.testi.forEach(t=>{ if(t.driveId) t.adaGambar=true; });
+    rapikanNomorScript();
     tulis(DB); render(); segarkanPill();
     toast(masuk+' baris masuk dari Sheet.');
   }catch(err){ pillSinkron('bad','Gagal tarik'); toast(err.message); }
@@ -1026,6 +1030,43 @@ const SKEMA={
     {k:'hook',t:'textarea',l:'Hook',rows:3},{k:'isi',t:'textarea',l:'Isi script',rows:12},
     {k:'tag',t:'text',l:'Tag',ph:'pisah pakai koma'}]}
 };
+/* ---- urutan script: seri dulu, baru nomor ---- */
+function angkaDari(v){
+  const n=parseInt(String(v==null?'':v).replace(/[^0-9]/g,''),10);
+  return isNaN(n)?null:n;
+}
+function nomorScript(s){
+  const n=angkaDari(s.nomor);
+  if(n!==null) return n;
+  const m=String(s.judul||'').match(/(\d+)/);   // "Script 49 — …"
+  return m?Number(m[1]):null;
+}
+function bandingScript(a,b){
+  const sa=String(a.seri||'').trim(), sb=String(b.seri||'').trim();
+  if(sa!==sb){
+    if(!sa) return 1;
+    if(!sb) return -1;
+    return sa.localeCompare(sb,'id',{numeric:true,sensitivity:'base'});
+  }
+  const na=nomorScript(a), nb=nomorScript(b);
+  if(na!==nb){
+    if(na===null) return 1;
+    if(nb===null) return -1;
+    return na-nb;
+  }
+  return (b.diubah||0)-(a.diubah||0);
+}
+/* Nomor yang tersimpan bisa berupa teks dari Sheet atau kosong pada
+   script lama. Dirapikan sekali di awal supaya pengurutan konsisten. */
+function rapikanNomorScript(){
+  let ubah=0;
+  DB.script.forEach(s=>{
+    const n=nomorScript(s);
+    if(n!==null && s.nomor!==n){ s.nomor=n; ubah++; }
+  });
+  if(ubah) tulis(DB);
+}
+
 let formTipe='customer',formId=null,urutNomor=true;
 function bukaForm(tipe,id){
   formTipe=tipe; formId=id||null;
@@ -1123,9 +1164,7 @@ function renderScript(){
     v=>{ filter.script=(filter.script===v?'':v); renderScript(); });
   const q=cari.toLowerCase();
   let data=DB.script.filter(s=>(!filter.script||(s.status||'belum')===filter.script)&&cocok(s,q));
-  data=urutNomor
-    ? data.slice().sort((a,b)=>(Number(a.nomor)||1e9)-(Number(b.nomor)||1e9)||(b.diubah||0)-(a.diubah||0))
-    : data.slice().sort((a,b)=>(b.diubah||0)-(a.diubah||0));
+  data=data.slice().sort(urutNomor?bandingScript:(a,b)=>(b.diubah||0)-(a.diubah||0));
   const list=$('#script-list');
   $('#n-script').textContent=DB.script.length;
   if(!data.length){
@@ -1134,10 +1173,19 @@ function renderScript(){
     const b=$('#scr-add'); if(b) b.onclick=()=>bukaForm('script'); return;
   }
   tampil.script=data.map(s=>s.id);
-  list.innerHTML=data.map(s=>{ const st=STATUS[s.status||'belum'];
-    return '<article class="card'+(dipilih.has(s.id)?' dipilih':'')+'" data-id="'+s.id+'">'+
+  const banyakSeri=new Set(data.map(s=>String(s.seri||'').trim())).size>1;
+  let seriTerakhir=null;
+  list.innerHTML=data.map((s,i)=>{ const st=STATUS[s.status||'belum'];
+    const seri=String(s.seri||'').trim();
+    let kepala='';
+    if(urutNomor&&banyakSeri&&seri!==seriTerakhir){
+      kepala='<div class="grup'+(i===0?' awal':'')+'">'+esc(seri||'Tanpa seri')+'</div>';
+      seriTerakhir=seri;
+    }
+    const no=nomorScript(s);
+    return kepala+'<article class="card'+(dipilih.has(s.id)?' dipilih':'')+'" data-id="'+s.id+'">'+
     '<div class="row">'+kotakPilih(s.id)+'<h3>'+esc(s.judul)+'</h3><span class="spacer"></span><span class="status '+st.cls+'">'+st.label+'</span></div>'+
-    '<div class="row" style="margin-top:7px"><span class="meta">'+(s.nomor?'#'+esc(s.nomor)+' · ':'')+esc(s.seri||'Tanpa seri')+' · '+tglID(s.tanggal)+'</span>'+
+    '<div class="row" style="margin-top:7px"><span class="meta">'+(no!==null?'#'+no+' · ':'')+esc(s.seri||'Tanpa seri')+' · '+tglID(s.tanggal)+'</span>'+
     String(s.tag||'').split(',').filter(x=>x.trim()).map(x=>'<span class="tag">'+esc(x.trim())+'</span>').join('')+'</div>'+
     (s.hook?'<div class="body-text open" style="font-family:var(--display);font-size:16px;color:var(--text);margin-top:12px">'+esc(s.hook)+'</div>':'')+
     '<div class="body-text">'+esc(s.isi||'')+'<div class="fade"></div></div>'+
@@ -1621,7 +1669,7 @@ $('#add-btn').onclick=()=>{
 };
 $('#script-urut').onclick=()=>{
   urutNomor=!urutNomor;
-  $('#script-urut').textContent=urutNomor?'Urut: nomor':'Urut: terbaru';
+  $('#script-urut').textContent=urutNomor?'Urut: seri & nomor':'Urut: terbaru';
   renderScript();
 };
 $('#q').oninput=e=>{ cari=e.target.value; render(); };
@@ -1648,6 +1696,7 @@ function render(){ renderTesti(); renderCustomer(); renderScript(); catatanSimpa
 (async function mulai(){
   await bukaIDB();
   (await idbKunci()).forEach(k=>punyaLokal.add(String(k)));
+  rapikanNomorScript();
   $('#s-url').value=DB.settings.url||'';
   $('#s-token').value=DB.settings.token||'';
   $('#s-auto').checked=DB.settings.auto!==false;
