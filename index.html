@@ -89,6 +89,10 @@ h1{font-family:var(--display);font-size:26px;font-weight:500;margin:6px 0 2px}
 .no{position:absolute;left:-46px;top:10px;font-family:var(--mono);font-size:10px;color:var(--dimmer)}
 .blok-img{margin-bottom:12px;position:relative;display:inline-block;max-width:100%}
 .blok-img img{max-width:100%;max-height:330px;border-radius:10px;border:1px solid var(--line);display:block;cursor:zoom-in;background:var(--surface-2)}
+.blok-img video{max-width:100%;max-height:330px;border-radius:10px;border:1px solid var(--line);display:block;background:#000}
+.blok-img .main{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.blok-img .main i{width:48px;height:48px;border-radius:50%;background:rgba(10,11,16,.7);border:1px solid var(--line);color:var(--text);display:flex;align-items:center;justify-content:center;font-style:normal;font-size:15px;padding-left:3px}
+.jenis{position:absolute;right:8px;bottom:8px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;background:rgba(10,11,16,.82);border:1px solid var(--line);border-radius:100px;padding:3px 9px;color:var(--violet)}
 .badge{position:absolute;left:8px;bottom:8px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;background:rgba(10,11,16,.82);border:1px solid var(--line);border-radius:100px;padding:3px 9px;color:var(--dimmer)}
 .badge.ok{color:var(--sage)}
 .lbl,.ket{outline:none;white-space:pre-wrap;word-break:break-word}
@@ -109,8 +113,9 @@ body.seret:after{content:"Lepas di sini";position:fixed;inset:0;z-index:80;displ
 .lembar.rapat .blok{display:grid;grid-template-columns:120px 1fr;gap:0 14px;padding:12px 0;margin-bottom:0}
 .lembar.rapat .no{display:none}
 .lembar.rapat .blok-img{margin:0;grid-row:span 4}
-.lembar.rapat .blok-img img{max-height:78px;width:120px;object-fit:cover}
-.lembar.rapat .blok-img .badge{display:none}
+.lembar.rapat .blok-img img,.lembar.rapat .blok-img video{max-height:78px;width:120px;object-fit:cover}
+.lembar.rapat .blok-img .badge,.lembar.rapat .blok-img .jenis{display:none}
+.lembar.rapat .blok-img .main i{width:30px;height:30px;font-size:11px}
 .lembar.rapat .lbl{font-size:15.5px}
 .lembar.rapat .ket{font-size:12.5px;margin-top:1px}
 .lembar.rapat .blok-act{margin-top:6px}
@@ -128,12 +133,22 @@ textarea{resize:vertical;min-height:96px;line-height:1.6}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
 .hint{font-size:12px;color:var(--dimmer);margin-top:-7px;margin-bottom:12px}
 .sheet-actions{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
-.fmt-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.fmt-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
 .opt{display:flex;align-items:center;gap:9px;margin-bottom:9px;cursor:pointer;font-size:13.5px;color:var(--dim)}
 .opt input{accent-color:var(--brass);width:15px;height:15px}
 .opt:hover{color:var(--text)}
 .preview{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px;font-family:var(--mono);font-size:12.5px;line-height:1.7;white-space:pre-wrap;max-height:340px;overflow:auto}
 .pilcrow{color:var(--clay);opacity:.75}
+.brk{color:var(--dimmer)}
+.pilih-bar{position:sticky;top:58px;z-index:19;display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin-bottom:16px}
+.pilih-bar .jml{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--brass)}
+.tick{display:inline-flex;align-items:center;margin:0 10px 0 0;cursor:pointer}
+.tick input{accent-color:var(--brass);width:17px;height:17px;cursor:pointer}
+.blok.dipilih,.card.dipilih{border-color:var(--brass)}
+.blok.dipilih{background:rgba(201,164,92,.05);border-radius:12px;padding-left:12px;padding-right:12px}
+body.memilih .lbl,body.memilih .ket{opacity:.75}
+.pilih-bar{scroll-margin-top:70px}
 
 .tp{position:fixed;inset:0;background:#0A0B10;z-index:90;display:none;flex-direction:column}
 .tp.on{display:flex}
@@ -156,6 +171,8 @@ details.help .in{padding:0 15px 15px}
 .lightbox{position:fixed;inset:0;background:rgba(5,6,10,.94);z-index:120;display:none;align-items:center;justify-content:center;padding:20px}
 .lightbox.on{display:flex}
 .lightbox img{max-width:100%;max-height:92vh;border-radius:10px}
+.lightbox video{max-width:100%;max-height:92vh;border-radius:10px;background:#000}
+.lightbox iframe{width:min(880px,94vw);height:min(540px,80vh);border:none;border-radius:10px;background:#000}
 .sw{display:flex;align-items:center;gap:10px;margin-bottom:11px;cursor:pointer;font-size:13.5px;color:var(--dim)}
 .sw input{accent-color:var(--brass);width:16px;height:16px}
 .sw:hover{color:var(--text)}
@@ -205,19 +222,32 @@ details.help .in{padding:0 15px 15px}
     <div class="content">
       <div id="banner-slot"></div>
 
+      <div class="pilih-bar" id="pilih-bar" hidden>
+        <span class="jml" id="pilih-jml">0 dipilih</span>
+        <button class="btn sm" id="pilih-semua">Pilih semua yang tampil</button>
+        <button class="btn sm ghost" id="pilih-nihil">Kosongkan pilihan</button>
+        <span class="spacer"></span>
+        <label class="sw" id="pilih-drive-w" style="margin:0"><input type="checkbox" id="pilih-drive">Hapus juga di Drive</label>
+        <button class="btn sm" id="pilih-ocr">OCR terpilih</button>
+        <button class="btn sm danger" id="pilih-hapus">Hapus</button>
+        <button class="btn sm ghost" id="pilih-batal">Selesai</button>
+      </div>
+
       <section id="tab-testi">
         <div class="row">
           <div><div class="eyebrow">Lembar Tulis</div><h1>Testi</h1></div>
           <span class="spacer"></span>
+          <button class="btn sm" id="pilih-testi">Pilih</button>
           <button class="btn sm" id="mode-toggle">Mode rapat</button>
         </div>
-        <p class="lede">Tempel screenshot pakai <kbd>Ctrl+V</kbd> atau seret ke halaman, lalu ketik labelnya langsung di bawah gambar. <kbd>Enter</kbd> turun ke keterangan, <kbd>Enter</kbd> lagi lompat ke gambar berikutnya.</p>
+        <p class="lede">Tempel screenshot pakai <kbd>Ctrl+V</kbd> atau seret ke halaman, lalu ketik labelnya langsung di bawah gambar. <kbd>Enter</kbd> turun ke keterangan, <kbd>Enter</kbd> lagi lompat ke blok berikutnya. Video pendek bisa diseret langsung; video panjang unggah dulu lewat Drive lalu tempel linknya.</p>
         <div class="chips" id="testi-chips"></div>
         <div class="lembar" id="lembar"></div>
         <div class="lembar-kaki" id="lembar-kaki">
-          <p>Tempel screenshot di mana saja, seret filenya ke sini, atau pilih manual.</p>
-          <button class="btn" id="pick-images">Pilih gambar</button>
-          <button class="btn" id="add-teks">Testi tanpa gambar</button>
+          <p>Tempel screenshot di mana saja, seret file ke sini, atau pilih manual.</p>
+          <button class="btn" id="pick-images">Pilih gambar atau video</button>
+          <button class="btn" id="add-video">Tempel link video Drive</button>
+          <button class="btn" id="add-teks">Testi tanpa media</button>
         </div>
       </section>
 
@@ -228,6 +258,8 @@ details.help .in{padding:0 15px 15px}
         <div class="row" style="margin-bottom:16px">
           <button class="btn sm" id="cust-tsv">Salin buat Sheet</button>
           <button class="btn sm" id="cust-csv">Unduh CSV</button>
+          <span class="spacer"></span>
+          <button class="btn sm" id="pilih-customer">Pilih</button>
         </div>
         <div class="chips" id="customer-chips"></div>
         <div id="customer-list"></div>
@@ -236,6 +268,12 @@ details.help .in{padding:0 15px 15px}
       <section id="tab-script" hidden>
         <div class="eyebrow">Naskah</div><h1>Script</h1>
         <p class="lede">Tulis sendiri, tandai statusnya, buka teleprompter atau salin dengan enter yang benar-benar enter.</p>
+        <div class="row" style="margin-bottom:16px">
+          <button class="btn sm" id="impor-md">Impor dari Markdown</button>
+          <button class="btn sm" id="script-urut">Urut: nomor</button>
+          <span class="spacer"></span>
+          <button class="btn sm" id="pilih-script">Pilih</button>
+        </div>
         <div class="stats" id="script-stats"></div>
         <div class="chips" id="script-chips"></div>
         <div id="script-list"></div>
@@ -253,6 +291,9 @@ details.help .in{padding:0 15px 15px}
             <input type="password" id="s-token" placeholder="sama persis dengan TOKEN di Code.gs"></label>
           <label class="sw"><input type="checkbox" id="s-auto" checked>Kirim otomatis setiap ada perubahan</label>
           <label class="sw"><input type="checkbox" id="s-publik" checked>Setel gambar di Drive jadi bisa dilihat lewat link</label>
+          <label style="margin-top:10px"><span class="l">Bahasa OCR</span>
+            <select id="s-ocr"><option value="id">Indonesia</option><option value="en">Inggris</option><option value="ms">Melayu</option></select></label>
+          <div class="hint" style="margin-top:-4px">OCR memakai layanan Drive. Sekali saja: di editor Apps Script buka <b>Services</b>, tambahkan <b>Drive API</b>, lalu deploy versi baru.</div>
           <div class="hint" style="margin-top:-4px">Perlu menyala kalau kamu mau melihat gambarnya dari HP atau laptop lain. Kalau dimatikan, Drive hanya jadi cadangan dan gambar cuma tampil di perangkat tempat kamu mengunggahnya.</div>
           <div class="card-actions">
             <button class="btn" id="s-save">Simpan sambungan</button>
@@ -306,14 +347,27 @@ details.help .in{padding:0 15px 15px}
   <p class="lede" style="margin-bottom:18px">Disalin sebagai teks polos, jadi tiap pindah baris terbaca sebagai enter penuh — bukan shift+enter.</p>
   <div class="fmt-grid">
     <div>
-      <label class="opt"><input type="checkbox" id="o-sentence" checked>Satu kalimat satu baris</label>
-      <label class="opt"><input type="checkbox" id="o-breath">Potong per napas (baris pendek)</label>
+      <label><span class="l">Susunan baris</span>
+        <select id="o-mode">
+          <option value="asli" selected>Ikut naskah asli — pindah baris persis seperti kamu menulisnya</option>
+          <option value="napas">Sama, tapi potong baris yang kepanjangan</option>
+          <option value="kalimat">Satu kalimat satu baris</option>
+        </select></label>
+      <label><span class="l">Jarak antar paragraf</span>
+        <select id="o-gap-par">
+          <option value="1">Rapat — tanpa baris kosong</option>
+          <option value="2" selected>Lega — satu baris kosong</option>
+          <option value="3">Sangat lega — dua baris kosong</option>
+        </select></label>
+      <label><span class="l">Jarak antar baris di dalam paragraf</span>
+        <select id="o-gap-baris">
+          <option value="1" selected>Rapat — enter biasa</option>
+          <option value="2">Lega — satu baris kosong</option>
+        </select></label>
+      <label><span class="l">Panjang maksimal baris</span><input type="number" id="o-width" value="42" min="18" max="90"></label>
+      <div class="hint">Hanya berlaku kalau susunan baris disetel “potong yang kepanjangan”.</div>
       <label class="opt"><input type="checkbox" id="o-trim" checked>Rapikan spasi berlebih</label>
       <label class="opt"><input type="checkbox" id="o-marks" checked>Tampilkan tanda enter di pratinjau</label>
-      <label style="margin-top:14px"><span class="l">Jarak antar baris</span>
-        <select id="o-gap"><option value="1">Rapat — satu enter</option><option value="2" selected>Lega — satu baris kosong</option><option value="3">Sangat lega — dua baris kosong</option></select></label>
-      <label><span class="l">Panjang napas</span><input type="number" id="o-width" value="42" min="18" max="90"></label>
-      <div class="hint">Dipakai kalau “potong per napas” menyala. 38–46 enak buat layar HP.</div>
     </div>
     <div><span class="l" style="font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:5px">Pratinjau</span>
       <div class="preview" id="fmt-preview"></div></div>
@@ -336,10 +390,57 @@ details.help .in{padding:0 15px 15px}
     <span class="spacer"></span><button class="btn" id="tp-close">Tutup</button>
   </div></div>
 
-<div class="lightbox" id="lightbox"><img id="lightbox-img" alt=""></div>
+<div class="scrim" id="scrim-impor"><div class="sheet" style="max-width:860px">
+  <h2>Impor script dari Markdown</h2>
+  <p class="lede" style="margin-bottom:18px">Pilih beberapa file .md sekaligus, atau tempel isinya. Nomor, judul, hari, dan hook diisi otomatis dari judul bagian dan paragraf pertama tiap script.</p>
+  <div class="fmt-grid">
+    <div>
+      <div class="row" style="margin-bottom:12px">
+        <button class="btn sm" id="imp-pilih">Pilih file .md</button>
+        <button class="btn sm ghost" id="imp-kosongkan">Kosongkan semua</button>
+      </div>
+      <div id="imp-berkas" style="margin-bottom:12px"></div>
+      <label><span class="l">Atau tempel langsung</span>
+        <textarea id="imp-teks" rows="7" placeholder="Tempel isi Markdown di sini…"></textarea></label>
+      <div class="grid2">
+        <label><span class="l">Seri</span><input type="text" id="imp-seri" placeholder="ikut tiap file"></label>
+        <label><span class="l">Status awal</span><select id="imp-status"></select></label>
+      </div>
+      <div class="hint">Kosongkan kolom seri kalau tiap file punya seri sendiri. Kalau diisi, semua script yang masuk pakai seri itu.</div>
+      <label class="opt"><input type="checkbox" id="imp-pisah" checked>Paragraf pertama jadi hook, sisanya jadi isi</label>
+      <label class="opt"><input type="checkbox" id="imp-lewati" checked>Lewati nomor yang sudah ada di seri yang sama</label>
+    </div>
+    <div>
+      <span class="l" style="font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:5px">Pratinjau</span>
+      <div class="preview" id="imp-pratinjau" style="max-height:420px">Belum ada yang ditempel.</div>
+    </div>
+  </div>
+  <div class="sheet-actions" style="margin-top:18px">
+    <button class="btn primary" id="imp-jalan">Impor</button>
+    <span class="spacer"></span>
+    <button class="btn ghost" data-close="scrim-impor">Tutup</button>
+  </div></div></div>
+
+<div class="scrim" id="scrim-ocr"><div class="sheet" style="max-width:720px">
+  <h2>Teks hasil OCR</h2>
+  <p class="lede" style="margin-bottom:16px" id="ocr-asal">—</p>
+  <label class="opt"><input type="checkbox" id="ocr-saring" checked>Buang jam, centang, dan baris pendek</label>
+  <label class="opt"><input type="checkbox" id="ocr-sensor" checked>Sensor nomor telepon</label>
+  <label style="margin-top:12px"><span class="l">Teks yang akan dimasukkan</span>
+    <textarea id="ocr-teks" rows="11"></textarea></label>
+  <div class="hint">Bebas kamu sunting dulu di sini. Tag <span style="font-family:var(--mono)">#begini</span> yang kamu tulis ikut terbaca sebagai tag.</div>
+  <div class="sheet-actions">
+    <button class="btn primary" id="ocr-ganti">Ganti keterangan</button>
+    <button class="btn" id="ocr-tambah">Tambahkan di bawah</button>
+    <span class="spacer"></span>
+    <button class="btn ghost" data-close="scrim-ocr">Batal</button>
+  </div></div></div>
+
+<div class="lightbox" id="lightbox"><div id="lightbox-isi"></div></div>
 <div class="toast" id="toast"></div>
 <input type="file" id="file-import" accept="application/json" hidden>
-<input type="file" id="file-images" accept="image/*" multiple hidden>
+<input type="file" id="file-images" accept="image/*,video/*" multiple hidden>
+<input type="file" id="file-md" accept=".md,.markdown,.txt,text/markdown,text/plain" multiple hidden>
 
 <script>
 /* ===================== DASAR ===================== */
@@ -365,6 +466,8 @@ function tulis(o){ if(memoryOnly){ mem=o; return; }
 let DB = baca() || {};
 DB.testi = DB.testi || []; DB.customer = DB.customer || []; DB.script = DB.script || [];
 DB.settings = DB.settings || { url:'', token:'', auto:true, publik:true, sinkronTerakhir:0 };
+DB.antri = DB.antri || { testi:[], customer:[], script:[] };
+['testi','customer','script'].forEach(k=>{ DB.antri[k]=DB.antri[k]||[]; });
 if (memoryOnly) mem = DB;
 
 let simpanTimer;
@@ -381,13 +484,13 @@ function catatanSimpanan(){
 }
 
 /* ---- gudang gambar: IndexedDB ---- */
-let idb=null; const gambarMem=new Map();
+let idb=null; const gambarMem=new Map(); const punyaLokal=new Set();
 function bukaIDB(){ return new Promise(res=>{
   let r; try{ r=indexedDB.open('meja_kerja',1); }catch(e){ return res(null); }
   r.onupgradeneeded=e=>{ const d=e.target.result; if(!d.objectStoreNames.contains('img')) d.createObjectStore('img'); };
   r.onsuccess=e=>{ idb=e.target.result; res(idb); }; r.onerror=()=>res(null); r.onblocked=()=>res(null);
 }); }
-function idbPut(k,v){ return new Promise(res=>{ if(!idb){ gambarMem.set(k,v); return res(); }
+function idbPut(k,v){ punyaLokal.add(k); return new Promise(res=>{ if(!idb){ gambarMem.set(k,v); return res(); }
   try{ const t=idb.transaction('img','readwrite'); t.objectStore('img').put(v,k);
     t.oncomplete=()=>res(); t.onerror=()=>{ gambarMem.set(k,v); res(); }; }
   catch(e){ gambarMem.set(k,v); res(); } }); }
@@ -395,29 +498,67 @@ function idbGet(k){ return new Promise(res=>{ if(!idb) return res(gambarMem.get(
   try{ const t=idb.transaction('img','readonly'); const q=t.objectStore('img').get(k);
     q.onsuccess=()=>res(q.result||gambarMem.get(k)||null); q.onerror=()=>res(null); }
   catch(e){ res(gambarMem.get(k)||null); } }); }
-function idbDel(k){ gambarMem.delete(k); if(!idb) return;
+function idbDel(k){ gambarMem.delete(k); punyaLokal.delete(k); if(!idb) return;
   try{ idb.transaction('img','readwrite').objectStore('img').delete(k); }catch(e){} }
+function idbKunci(){ return new Promise(res=>{ if(!idb) return res(Array.from(gambarMem.keys()));
+  try{ const t=idb.transaction('img','readonly'); const q=t.objectStore('img').getAllKeys();
+    q.onsuccess=()=>res(q.result||[]); q.onerror=()=>res([]); }catch(e){ res([]); } }); }
 function idbSemua(){ return new Promise(res=>{ if(!idb) return res(Object.fromEntries(gambarMem));
   try{ const t=idb.transaction('img','readonly'); const c=t.objectStore('img').openCursor(); const h={};
     c.onsuccess=e=>{ const cur=e.target.result; if(cur){ h[cur.key]=cur.value; cur.continue(); } else res(h); };
     c.onerror=()=>res(h); }catch(e){ res({}); } }); }
 
 /* ===================== FORMATTER ===================== */
-function rapikan(text,opt){
+/* Naskah dipecah dulu jadi paragraf (dipisah baris kosong).
+   Pindah baris di DALAM paragraf tetap satu enter — persis seperti kamu menulisnya.
+   Baris kosong hanya muncul di ANTAR paragraf. */
+function paragrafkan(text,trim){
   let t=String(text||'').replace(/\r\n?/g,'\n');
-  if(opt.trim){ t=t.split('\n').map(l=>l.replace(/[ \t]+/g,' ').trim()).join('\n'); t=t.replace(/\n{3,}/g,'\n\n'); }
-  let lines=t.split('\n').filter(l=>l.length);
-  if(opt.sentence){ const out=[];
-    lines.forEach(l=>{ l.replace(/([.!?…]+)\s+/g,'$1\n').split('\n').forEach(s=>{ s=s.trim(); if(s) out.push(s); }); });
-    lines=out; }
-  let blok=lines.map(l=>[l]);
-  if(opt.breath){ const w=Math.max(18,Number(opt.width)||42);
-    blok=blok.map(par=>{ const l=par[0]; if(l.length<=w) return [l];
-      const p=[]; let cur='';
-      l.split(' ').forEach(kata=>{ if(!cur) cur=kata; else if((cur+' '+kata).length<=w) cur+=' '+kata; else { p.push(cur); cur=kata; } });
-      if(cur) p.push(cur); return p; }); }
-  const gap='\n'.repeat(Math.max(1,Number(opt.gap)||1));
-  return blok.map(b=>b.join('\n')).join(gap);
+  if(trim!==false) t=t.split('\n').map(l=>l.replace(/[ \t]+/g,' ').trim()).join('\n');
+  return t.split(/\n[ \t]*\n+/)
+          .map(p=>p.split('\n').filter(l=>l.length))
+          .filter(p=>p.length);
+}
+function potongLebar(baris,w){
+  const out=[];
+  baris.forEach(l=>{
+    if(l.length<=w){ out.push(l); return; }
+    let cur='';
+    l.split(' ').forEach(kata=>{
+      if(!cur) cur=kata;
+      else if((cur+' '+kata).length<=w) cur+=' '+kata;
+      else { out.push(cur); cur=kata; }
+    });
+    if(cur) out.push(cur);
+  });
+  return out;
+}
+function rapikan(text,opt){
+  opt=opt||{};
+  const mode=opt.mode||'asli';
+  const gapBaris='\n'.repeat(Math.max(1,Number(opt.gapBaris)||1));
+  const gapPar  ='\n'.repeat(Math.max(1,Number(opt.gapParagraf)||2));
+  const w=Math.max(18,Number(opt.width)||42);
+  return paragrafkan(text,opt.trim).map(baris=>{
+    if(mode==='kalimat'){
+      const out=[];
+      baris.forEach(l=>{ l.replace(/([.!?…]+)\s+/g,'$1\n').split('\n')
+        .forEach(s=>{ s=s.trim(); if(s) out.push(s); }); });
+      baris=out;
+    } else if(mode==='napas'){
+      baris=potongLebar(baris,w);
+    }
+    return baris.join(gapBaris);
+  }).join(gapPar);
+}
+/* Setelan bawaan: ikut naskah asli, satu baris kosong antar paragraf. */
+const SIAP_KIRIM    = {mode:'asli', trim:true, gapBaris:1, gapParagraf:2};
+const SIAP_PROMPTER = {mode:'napas',trim:true, gapBaris:1, gapParagraf:2, width:42};
+/* Dipakai saat impor: buang spasi ekor dan rapatkan baris kosong beruntun. */
+function rapikanNaskah(t){
+  return String(t||'').replace(/\r\n?/g,'\n')
+    .split('\n').map(l=>l.replace(/[ \t]+$/,'')).join('\n')
+    .replace(/\n{3,}/g,'\n\n').trim();
 }
 async function salinPolos(text){
   try{ await navigator.clipboard.writeText(text); toast('Tersalin. Tinggal tempel.'); return true; }
@@ -447,11 +588,16 @@ function dataURLkeFile(dataURL,nama){
 
 let fmtSource='';
 function bukaFormatter(t){ fmtSource=t||''; $('#scrim-fmt').classList.add('on'); renderFmt(); }
-const fmtOpt=()=>({sentence:$('#o-sentence').checked,breath:$('#o-breath').checked,trim:$('#o-trim').checked,gap:$('#o-gap').value,width:$('#o-width').value});
+const fmtOpt=()=>({mode:$('#o-mode').value,trim:$('#o-trim').checked,
+  gapParagraf:$('#o-gap-par').value,gapBaris:$('#o-gap-baris').value,width:$('#o-width').value});
 const fmtHasil=()=>rapikan(fmtSource,fmtOpt());
-function renderFmt(){ const o=fmtHasil();
-  $('#fmt-preview').innerHTML=$('#o-marks').checked?esc(o).replace(/\n/g,'<span class="pilcrow">¶</span>\n'):esc(o); }
-['#o-sentence','#o-breath','#o-trim','#o-marks','#o-gap','#o-width'].forEach(s=>$(s).addEventListener('input',renderFmt));
+function renderFmt(){
+  const o=fmtHasil();
+  if(!$('#o-marks').checked){ $('#fmt-preview').textContent=o; return; }
+  $('#fmt-preview').innerHTML=esc(o).replace(/\n+/g,run=>
+    (run.length>1?'<span class="pilcrow">¶</span>':'<span class="brk">↵</span>')+run);
+}
+['#o-mode','#o-trim','#o-marks','#o-gap-par','#o-gap-baris','#o-width'].forEach(s=>$(s).addEventListener('input',renderFmt));
 $('#fmt-copy').onclick=()=>salinPolos(fmtHasil());
 $('#fmt-wa').onclick=()=>kirimWA(fmtHasil());
 $('#fmt-share').onclick=()=>bagikan(fmtHasil());
@@ -478,7 +624,8 @@ $('#tp-size').oninput=e=>document.documentElement.style.setProperty('--tp-size',
 /* ===================== SINKRON ===================== */
 let sinkronJalan=false, sinkronTimer=null;
 const tersambung=()=>!!(DB.settings.url && DB.settings.token);
-const menunggu=()=>DB.testi.filter(x=>x.perlu).length+DB.customer.filter(x=>x.perlu).length+DB.script.filter(x=>x.perlu).length;
+const menunggu=()=>DB.testi.filter(x=>x.perlu).length+DB.customer.filter(x=>x.perlu).length+DB.script.filter(x=>x.perlu).length
+  +DB.antri.testi.length+DB.antri.customer.length+DB.antri.script.length;
 function pillSinkron(state,teks){ const p=$('#sync-pill'); p.className='pill'+(state?' '+state:''); p.textContent=teks; }
 function segarkanPill(){
   if(!tersambung()) return pillSinkron('','Lokal saja');
@@ -511,18 +658,21 @@ async function sinkronkan(diam){
       if(t.perlu && t.adaGambar && !t.driveId){
         const src=await idbGet(t.id);
         if(src){
-          const j=await panggil('upload',{nama:'testi-'+t.id+'.jpg',mime:'image/jpeg',data:src.split(',')[1],publik:!!DB.settings.publik});
+          const mime=t.mime||(typeof src==='string'?'image/jpeg':(src.type||'video/mp4'));
+          const b64=await keBase64(src);
+          if(!b64) continue;
+          const j=await panggil('upload',{nama:'testi-'+t.id+ekstensi(mime),mime:mime,data:b64,publik:!!DB.settings.publik});
           t.driveId=j.driveId;
           const b=document.querySelector('.blok[data-id="'+t.id+'"] .badge');
           if(b){ b.textContent='Drive'; b.className='badge ok'; }
         }
       }
     }
-    const muatan={ testi:DB.testi.filter(x=>x.perlu).map(bersih),
-                   customer:DB.customer.filter(x=>x.perlu).map(bersih),
-                   script:DB.script.filter(x=>x.perlu).map(bersih) };
+    const muatan={ testi:DB.testi.filter(x=>x.perlu).map(bersih).concat(DB.antri.testi),
+                   customer:DB.customer.filter(x=>x.perlu).map(bersih).concat(DB.antri.customer),
+                   script:DB.script.filter(x=>x.perlu).map(bersih).concat(DB.antri.script) };
     if(muatan.testi.length||muatan.customer.length||muatan.script.length) await panggil('push',{data:muatan});
-    ['testi','customer','script'].forEach(k=>DB[k].forEach(x=>{ delete x.perlu; }));
+    ['testi','customer','script'].forEach(k=>{ DB[k].forEach(x=>{ delete x.perlu; }); DB.antri[k]=[]; });
     DB.settings.sinkronTerakhir=Date.now();
     tulis(DB);
     if(!diam) toast('Terkirim ke Sheet.');
@@ -557,6 +707,7 @@ $('#sync-pill').onclick=()=>{ if(!tersambung()) gotoTab('data'); else sinkronkan
 $('#s-save').onclick=()=>{
   DB.settings.url=$('#s-url').value.trim(); DB.settings.token=$('#s-token').value.trim();
   DB.settings.auto=$('#s-auto').checked; DB.settings.publik=$('#s-publik').checked;
+  DB.settings.bahasaOCR=$('#s-ocr').value;
   tulis(DB); segarkanPill(); toast(tersambung()?'Sambungan tersimpan.':'Alamat atau token masih kosong.');
 };
 $('#s-test').onclick=async()=>{
@@ -578,11 +729,44 @@ function hashDari(s){
 const tagTesti=t=>Array.from(new Set(hashDari(t.label).concat(hashDari(t.keterangan))));
 const tanpaHash=s=>String(s||'').replace(/#[A-Za-z0-9_\u00C0-\u024F-]+/g,'').replace(/[ \t]{2,}/g,' ').trim();
 
-async function muatGambar(t,img){
-  const lokal=await idbGet(t.id);
-  if(lokal){ t._src=lokal; img.src=lokal; }
-  else if(t.driveId) img.src='https://drive.google.com/thumbnail?id='+t.driveId+'&sz=w900';
+const isVideo   = t => String(t.jenis||'')==='video';
+const adaMedia  = t => !!(t.adaGambar||t.driveId);
+const lokalAda  = t => punyaLokal.has(t.id);
+const posterDrive = id => 'https://drive.google.com/thumbnail?id='+id+'&sz=w900';
+const linkDrive   = id => 'https://drive.google.com/file/d/'+id+'/view';
+const pratinjauDrive = id => 'https://drive.google.com/file/d/'+id+'/preview';
+
+function urlDari(v){ return typeof v==='string' ? v : URL.createObjectURL(v); }
+function keBase64(v){
+  if(typeof v==='string') return Promise.resolve(v.split(',')[1]);
+  return new Promise(res=>{ const fr=new FileReader();
+    fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=()=>res(null); fr.readAsDataURL(v); });
 }
+function idDariLink(teks){
+  const s=String(teks||'').trim();
+  const m=s.match(/\/d\/([-\w]{20,})/)||s.match(/[?&]id=([-\w]{20,})/)||s.match(/^([-\w]{20,})$/);
+  return m?m[1]:'';
+}
+
+async function muatMedia(t,el){
+  const lokal=await idbGet(t.id);
+  if(lokal){ t._src=lokal; el.src=urlDari(lokal); return; }
+  if(t.driveId) el.src=posterDrive(t.driveId);
+}
+
+function mediaHTML(t){
+  if(!adaMedia(t)) return '';
+  const badge='<span class="badge'+(t.driveId?' ok':'')+'">'+(t.driveId?'Drive':'Lokal')+'</span>'
+            + (isVideo(t)?'<span class="jenis">Video</span>':'');
+  if(isVideo(t)){
+    return lokalAda(t)
+      ? '<div class="blok-img"><video controls preload="metadata" playsinline></video>'+badge+'</div>'
+      : '<div class="blok-img"><img alt="Cuplikan video testi"><span class="main"><i>&#9654;</i></span>'+badge+'</div>';
+  }
+  return '<div class="blok-img"><img alt="Screenshot testi">'+badge+'</div>';
+}
+
+function bukaLightbox(html){ $('#lightbox-isi').innerHTML=html; $('#lightbox').classList.add('on'); }
 function segarkanHash(el,t){
   const bar=el.querySelector('.hashbar'); if(!bar) return;
   const tags=tagTesti(t);
@@ -590,8 +774,15 @@ function segarkanHash(el,t){
 }
 
 function pasangBlok(el,t){
-  const img=el.querySelector('img');
-  if(img){ muatGambar(t,img); img.onclick=()=>{ $('#lightbox-img').src=img.src; $('#lightbox').classList.add('on'); }; }
+  const media=el.querySelector('.blok-img img, .blok-img video');
+  if(media){
+    muatMedia(t,media);
+    if(media.tagName==='IMG') media.onclick=()=>{
+      if(isVideo(t)&&t.driveId) bukaLightbox('<iframe src="'+pratinjauDrive(t.driveId)+'" allow="autoplay" allowfullscreen></iframe>');
+      else if(isVideo(t)) toast('Video ini belum punya salinan di sini. Tarik dari Sheet atau tempel ulang linknya.');
+      else bukaLightbox('<img src="'+media.src+'" alt="">');
+    };
+  }
   segarkanHash(el,t);
 
   el.querySelectorAll('[contenteditable]').forEach(bidang=>{
@@ -619,19 +810,37 @@ function pasangBlok(el,t){
     });
   });
 
-  const teksTesti=()=>{ const a=tanpaHash(t.label), b=tanpaHash(t.keterangan); return a+(b?'\n\n'+b:''); };
-  el.querySelector('[data-a=wa]').onclick=()=>kirimWA(rapikan(teksTesti(),{sentence:true,trim:true,gap:2}));
-  el.querySelector('[data-a=salin]').onclick=()=>salinPolos(rapikan(teksTesti(),{sentence:true,trim:true,gap:2}));
+  const teksTesti=()=>{
+    const a=tanpaHash(t.label), b=tanpaHash(t.keterangan);
+    let s=a+(b?'\n\n'+b:'');
+    if(isVideo(t)&&t.driveId) s+=(s?'\n\n':'')+linkDrive(t.driveId);
+    return s;
+  };
+  el.querySelector('[data-a=wa]').onclick=()=>kirimWA(rapikan(teksTesti(),SIAP_KIRIM));
+  el.querySelector('[data-a=salin]').onclick=()=>salinPolos(rapikan(teksTesti(),SIAP_KIRIM));
   el.querySelector('[data-a=share]').onclick=async()=>{
     const src=await idbGet(t.id);
-    bagikan(teksTesti(),src?dataURLkeFile(src,'testi.jpg'):null,t.label);
+    let berkas=null;
+    if(src){
+      if(typeof src==='string') berkas=dataURLkeFile(src,'testi.jpg');
+      else berkas=new File([src],'testi'+ekstensi(t.mime),{type:t.mime||src.type||'video/mp4'});
+    }
+    bagikan(teksTesti(),berkas,t.label);
   };
   el.querySelector('[data-a=ganti]').onclick=()=>{ gantiUntuk=t.id; $('#file-images').click(); };
-  el.querySelector('[data-a=hapus]').onclick=()=>{
-    if(!confirm('Hapus testi ini dari perangkat ini?')) return;
+  const tOcr=el.querySelector('[data-a=ocr]');
+  if(tOcr) tOcr.onclick=()=>ocrSatu(t);
+  el.querySelector('[data-a=hapus]').onclick=async()=>{
+    const apa=isVideo(t)?'video':'testi';
+    if(!confirm('Hapus '+apa+' ini?')) return;
+    let buang='';
+    if(t.driveId&&tersambung()&&confirm('Hapus juga filenya di folder Drive?\n\nBatal berarti filenya tetap ada di Drive.')) buang=t.driveId;
     idbDel(t.id);
+    tandaiHapus('testi',t);
     DB.testi=DB.testi.filter(x=>x.id!==t.id);
+    dipilih.delete(t.id);
     save(true); renderTesti(); toast('Terhapus.');
+    if(buang){ await buangDrive([buang]); toast('File Drive ikut dibuang.'); }
   };
 }
 
@@ -647,14 +856,17 @@ function renderTesti(){
   lembar.className='lembar'+(modeRapat?' rapat':'');
   lembar.innerHTML='';
 
+  tampil.testi=[];
   DB.testi.forEach((t,i)=>{
     if(filter.testi && tagTesti(t).indexOf(filter.testi)<0) return;
     if(q && ((t.label||'')+' '+(t.keterangan||'')).toLowerCase().indexOf(q)<0) return;
+    tampil.testi.push(t.id);
 
     const el=document.createElement('div');
-    el.className='blok'; el.dataset.id=t.id;
+    el.className='blok'+(dipilih.has(t.id)?' dipilih':''); el.dataset.id=t.id;
     el.innerHTML='<span class="no">'+String(i+1).padStart(2,'0')+'</span>'
-      +((t.adaGambar||t.driveId)?'<div class="blok-img"><img alt="Screenshot testi"><span class="badge'+(t.driveId?' ok':'')+'">'+(t.driveId?'Drive':'Lokal')+'</span></div>':'')
+      +kotakPilih(t.id)
+      +mediaHTML(t)
       +'<div class="lbl" contenteditable="plaintext-only" data-f="label" data-ph="Tulis label testi…"></div>'
       +'<div class="ket" contenteditable="plaintext-only" data-f="keterangan" data-ph="Keterangan singkat, pakai #tag biar gampang dicari"></div>'
       +'<div class="hashbar"></div>'
@@ -662,6 +874,7 @@ function renderTesti(){
       +'<button class="btn sm" data-a="wa">WhatsApp</button>'
       +'<button class="btn sm" data-a="share">Bagikan</button>'
       +'<button class="btn sm" data-a="salin">Salin label</button>'
+      +((adaMedia(t)&&!isVideo(t))?'<button class="btn sm" data-a="ocr">OCR</button>':'')
       +'<button class="btn sm" data-a="ganti">Ganti gambar</button>'
       +'<span class="spacer"></span>'
       +'<button class="btn sm ghost danger" data-a="hapus">Hapus</button></div>';
@@ -669,6 +882,7 @@ function renderTesti(){
     el.querySelector('[data-f=keterangan]').textContent=t.keterangan||'';
     lembar.appendChild(el);
     pasangBlok(el,t);
+    pasangPilih(el);
   });
 
   if(!lembar.children.length)
@@ -691,34 +905,75 @@ function kecilkan(file){
     fr.onerror=()=>res(null); fr.readAsDataURL(file);
   });
 }
+const BATAS_VIDEO = 15*1024*1024;   // di atas ini, unggah lewat Drive lalu tempel linknya
+function ekstensi(mime){
+  const m=String(mime||'');
+  if(m.indexOf('video/webm')===0) return '.webm';
+  if(m.indexOf('video/quicktime')===0) return '.mov';
+  if(m.indexOf('video/')===0) return '.mp4';
+  if(m.indexOf('image/png')===0) return '.png';
+  return '.jpg';
+}
+async function siapkan(f){
+  if(f.type.indexOf('video/')===0){
+    if(f.size>BATAS_VIDEO){
+      toast('Video "'+f.name+'" terlalu besar untuk jalur langsung. Unggah ke Drive lalu tempel linknya.');
+      return null;
+    }
+    return { isi:f, jenis:'video', mime:f.type||'video/mp4' };
+  }
+  const src=await kecilkan(f);
+  return src ? { isi:src, jenis:'gambar', mime:'image/jpeg' } : null;
+}
 async function tambahGambar(files){
-  const daftar=Array.prototype.slice.call(files).filter(f=>f.type.indexOf('image/')===0);
+  const daftar=Array.prototype.slice.call(files).filter(f=>f.type.indexOf('image/')===0||f.type.indexOf('video/')===0);
   if(!daftar.length) return;
+
   if(gantiUntuk){
     const t=DB.testi.find(x=>x.id===gantiUntuk); gantiUntuk=null;
-    const src=await kecilkan(daftar[0]); if(!src||!t) return;
-    await idbPut(t.id,src);
-    t._src=src; t.adaGambar=true; t.driveId=''; t.diubah=Date.now(); t.perlu=1;
-    save(true); renderTesti(); toast('Gambar diganti.'); return;
+    const m=await siapkan(daftar[0]); if(!m||!t) return;
+    await idbPut(t.id,m.isi);
+    t._src=m.isi; t.adaGambar=true; t.jenis=m.jenis; t.mime=m.mime;
+    t.driveId=''; t.diubah=Date.now(); t.perlu=1;
+    save(true); renderTesti(); toast('Media diganti.'); return;
   }
-  let pertama=null;
+
+  let pertama=null, jml=0;
   for(const f of daftar){
-    const src=await kecilkan(f); if(!src) continue;
-    const t={id:uid(),label:'',keterangan:'',driveId:'',tanggal:today(),diubah:Date.now(),adaGambar:true,perlu:1,_src:src};
-    await idbPut(t.id,src);
-    DB.testi.push(t); if(!pertama) pertama=t.id;
+    const m=await siapkan(f); if(!m) continue;
+    const t={id:uid(),label:'',keterangan:'',driveId:'',tanggal:today(),diubah:Date.now(),
+             jenis:m.jenis,mime:m.mime,adaGambar:true,perlu:1,_src:m.isi};
+    await idbPut(t.id,m.isi);
+    DB.testi.push(t); jml++; if(!pertama) pertama=t.id;
   }
+  if(!jml) return;
   save(true); renderTesti();
-  if(pertama){
-    const el=document.querySelector('.blok[data-id="'+pertama+'"]');
-    if(el){ el.scrollIntoView({block:'center',behavior:'smooth'}); el.querySelector('[data-f=label]').focus(); }
-    toast(daftar.length+' gambar masuk. Tinggal ketik labelnya.');
-  }
+  const el=document.querySelector('.blok[data-id="'+pertama+'"]');
+  if(el){ el.scrollIntoView({block:'center',behavior:'smooth'}); el.querySelector('[data-f=label]').focus(); }
+  toast(jml+' media masuk. Tinggal ketik labelnya.');
 }
 $('#pick-images').onclick=()=>{ gantiUntuk=null; $('#file-images').click(); };
 $('#file-images').onchange=e=>{ tambahGambar(e.target.files); e.target.value=''; };
+$('#add-video').onclick=async()=>{
+  const teks=prompt('Tempel link video dari Google Drive:\n\nContoh: https://drive.google.com/file/d/1AbC.../view');
+  if(teks===null) return;
+  const id=idDariLink(teks);
+  if(!id){ toast('Link itu tidak mengandung ID file Drive.'); return; }
+  if(DB.testi.some(x=>x.driveId===id)){ toast('Video itu sudah ada di lembar.'); return; }
+  const t={id:uid(),label:'',keterangan:'',driveId:id,tanggal:today(),diubah:Date.now(),
+           jenis:'video',mime:'video/mp4',adaGambar:false,perlu:1};
+  DB.testi.push(t); save(true); renderTesti();
+  const el=document.querySelector('.blok[data-id="'+t.id+'"]');
+  if(el){ el.scrollIntoView({block:'center',behavior:'smooth'}); el.querySelector('[data-f=label]').focus(); }
+  toast('Video tertaut. Tinggal ketik labelnya.');
+  if(tersambung()){
+    try{ await panggil('bukaAkses',{driveId:id}); toast('Akses lewat link dibuka, cuplikannya akan muncul sebentar lagi.'); }
+    catch(e){ toast('Video tertaut, tapi aksesnya belum dibuka: '+e.message); }
+  }
+};
 $('#add-teks').onclick=()=>{
-  const t={id:uid(),label:'',keterangan:'',driveId:'',tanggal:today(),diubah:Date.now(),adaGambar:false,perlu:1};
+  const t={id:uid(),label:'',keterangan:'',driveId:'',tanggal:today(),diubah:Date.now(),
+           jenis:'gambar',mime:'',adaGambar:false,perlu:1};
   DB.testi.push(t); save(true); renderTesti();
   const el=document.querySelector('.blok[data-id="'+t.id+'"]');
   if(el){ el.scrollIntoView({block:'center'}); el.querySelector('[data-f=label]').focus(); }
@@ -758,11 +1013,12 @@ const SKEMA={
     {k:'catatan',t:'textarea',l:'Catatan',rows:3}]},
   script:{judul:'Script',fields:[
     {k:'judul',t:'text',l:'Judul script',ph:'Diam Bernyawa #12'},
-    {k:'seri',t:'text',l:'Seri / season',ph:'Season 4',half:1},{k:'status',t:'status',l:'Status',half:1},
-    {k:'hook',t:'textarea',l:'Hook',rows:2},{k:'isi',t:'textarea',l:'Isi script',rows:12},
-    {k:'tag',t:'text',l:'Tag',ph:'pisah pakai koma'},{k:'tanggal',t:'date',l:'Tanggal',half:1}]}
+    {k:'nomor',t:'number',l:'Nomor urut',ph:'49',half:1},{k:'seri',t:'text',l:'Seri / season',ph:'Season 4',half:1},
+    {k:'status',t:'status',l:'Status',half:1},{k:'tanggal',t:'date',l:'Tanggal',half:1},
+    {k:'hook',t:'textarea',l:'Hook',rows:3},{k:'isi',t:'textarea',l:'Isi script',rows:12},
+    {k:'tag',t:'text',l:'Tag',ph:'pisah pakai koma'}]}
 };
-let formTipe='customer',formId=null;
+let formTipe='customer',formId=null,urutNomor=true;
 function bukaForm(tipe,id){
   formTipe=tipe; formId=id||null;
   const sk=SKEMA[tipe], data=(id?DB[tipe].find(x=>x.id===id):{})||{};
@@ -799,8 +1055,9 @@ $('#form-save').onclick=()=>{
 $('#form-delete').onclick=()=>{
   if(!formId||!confirm('Hapus catatan ini?')) return;
   const o=DB[formTipe].find(x=>x.id===formId);
-  if(o&&tersambung()){ o.hapus=true; o.diubah=Date.now(); o.perlu=1; sinkronkan(true); }
+  if(o) tandaiHapus(formTipe,o);
   DB[formTipe]=DB[formTipe].filter(x=>x.id!==formId);
+  dipilih.delete(formId);
   save(true); render(); $('#scrim-form').classList.remove('on'); toast('Terhapus.');
 };
 function chipBar(el,opsi,aktif,pilih){
@@ -826,18 +1083,21 @@ function renderCustomer(){
   const list=$('#customer-list');
   $('#n-customer').textContent=DB.customer.length;
   if(!data.length){
+    tampil.customer=[];
     list.innerHTML='<div class="empty"><p>'+(DB.customer.length?'Tidak ada yang cocok.':'Belum ada customer tercatat.')+'</p><button class="btn primary" id="cust-add">Tambah customer</button></div>';
     const b=$('#cust-add'); if(b) b.onclick=()=>bukaForm('customer'); return;
   }
+  tampil.customer=data.map(c=>c.id);
   list.innerHTML=data.map(c=>
-    '<article class="card" data-id="'+c.id+'">'+
-    '<div class="row"><h3>'+esc(c.nama)+'</h3>'+((c.fase&&c.fase!=='Belum ditandai')?'<span class="tag">'+esc(c.fase)+'</span>':'')+
+    '<article class="card'+(dipilih.has(c.id)?' dipilih':'')+'" data-id="'+c.id+'">'+
+    '<div class="row">'+kotakPilih(c.id)+'<h3>'+esc(c.nama)+'</h3>'+((c.fase&&c.fase!=='Belum ditandai')?'<span class="tag">'+esc(c.fase)+'</span>':'')+
     '<span class="spacer"></span><span class="meta">'+tglID(c.tanggal)+' · '+esc(c.status||'')+'</span></div>'+
     '<div class="row" style="margin-top:6px"><span class="meta">'+esc(c.produk||'Tanpa produk')+' · '+rupiah(c.harga)+' · '+esc(c.sumber||'—')+(c.wa?' · '+esc(c.wa):'')+'</span></div>'+
     (c.alasan?'<div class="body-text open" style="border-left:2px solid var(--line);padding-left:12px;font-style:italic">'+esc(c.alasan)+'</div>':'')+
     '<div class="card-actions">'+(c.wa?'<button class="btn sm" data-a="chat">Buka chat</button>':'')+
     '<button class="btn sm" data-a="salin">Salin alasan</button><span class="spacer"></span>'+
     '<button class="btn sm ghost" data-a="edit">Ubah</button></div></article>').join('');
+  pasangPilih(list);
   list.querySelectorAll('.card').forEach(card=>{
     const c=DB.customer.find(x=>x.id===card.dataset.id);
     const ch=card.querySelector('[data-a=chat]');
@@ -854,17 +1114,22 @@ function renderScript(){
   chipBar($('#script-chips'),[{v:'',t:'Semua'}].concat(Object.keys(STATUS).map(k=>({v:k,t:STATUS[k].label}))),filter.script,
     v=>{ filter.script=(filter.script===v?'':v); renderScript(); });
   const q=cari.toLowerCase();
-  const data=DB.script.filter(s=>(!filter.script||(s.status||'belum')===filter.script)&&cocok(s,q));
+  let data=DB.script.filter(s=>(!filter.script||(s.status||'belum')===filter.script)&&cocok(s,q));
+  data=urutNomor
+    ? data.slice().sort((a,b)=>(Number(a.nomor)||1e9)-(Number(b.nomor)||1e9)||(b.diubah||0)-(a.diubah||0))
+    : data.slice().sort((a,b)=>(b.diubah||0)-(a.diubah||0));
   const list=$('#script-list');
   $('#n-script').textContent=DB.script.length;
   if(!data.length){
+    tampil.script=[];
     list.innerHTML='<div class="empty"><p>'+(DB.script.length?'Tidak ada yang cocok.':'Belum ada script.')+'</p><button class="btn primary" id="scr-add">Tambah script</button></div>';
     const b=$('#scr-add'); if(b) b.onclick=()=>bukaForm('script'); return;
   }
+  tampil.script=data.map(s=>s.id);
   list.innerHTML=data.map(s=>{ const st=STATUS[s.status||'belum'];
-    return '<article class="card" data-id="'+s.id+'">'+
-    '<div class="row"><h3>'+esc(s.judul)+'</h3><span class="spacer"></span><span class="status '+st.cls+'">'+st.label+'</span></div>'+
-    '<div class="row" style="margin-top:7px"><span class="meta">'+esc(s.seri||'Tanpa seri')+' · '+tglID(s.tanggal)+'</span>'+
+    return '<article class="card'+(dipilih.has(s.id)?' dipilih':'')+'" data-id="'+s.id+'">'+
+    '<div class="row">'+kotakPilih(s.id)+'<h3>'+esc(s.judul)+'</h3><span class="spacer"></span><span class="status '+st.cls+'">'+st.label+'</span></div>'+
+    '<div class="row" style="margin-top:7px"><span class="meta">'+(s.nomor?'#'+esc(s.nomor)+' · ':'')+esc(s.seri||'Tanpa seri')+' · '+tglID(s.tanggal)+'</span>'+
     String(s.tag||'').split(',').filter(x=>x.trim()).map(x=>'<span class="tag">'+esc(x.trim())+'</span>').join('')+'</div>'+
     (s.hook?'<div class="body-text open" style="font-family:var(--display);font-size:16px;color:var(--text);margin-top:12px">'+esc(s.hook)+'</div>':'')+
     '<div class="body-text">'+esc(s.isi||'')+'<div class="fade"></div></div>'+
@@ -872,12 +1137,13 @@ function renderScript(){
     '<button class="btn sm" data-a="fmt">Rapikan &amp; salin</button><button class="btn sm" data-a="wa">WhatsApp</button>'+
     '<button class="btn sm" data-a="next">Naikkan status</button><span class="spacer"></span>'+
     '<button class="btn sm ghost" data-a="edit">Ubah</button></div></article>'; }).join('');
+  pasangPilih(list);
   list.querySelectorAll('.card').forEach(card=>{
     const s=DB.script.find(x=>x.id===card.dataset.id);
     const teks=(s.hook?s.hook+'\n\n':'')+(s.isi||'');
-    card.querySelector('[data-a=tp]').onclick=()=>bukaTeleprompter(rapikan(teks,{sentence:true,breath:true,trim:true,gap:1,width:42}));
+    card.querySelector('[data-a=tp]').onclick=()=>bukaTeleprompter(rapikan(teks,SIAP_PROMPTER));
     card.querySelector('[data-a=fmt]').onclick=()=>bukaFormatter(teks);
-    card.querySelector('[data-a=wa]').onclick=()=>kirimWA(rapikan(teks,{sentence:true,trim:true,gap:2}));
+    card.querySelector('[data-a=wa]').onclick=()=>kirimWA(rapikan(teks,SIAP_KIRIM));
     card.querySelector('[data-a=edit]').onclick=()=>bukaForm('script',s.id);
     card.querySelector('[data-a=next]').onclick=()=>{
       const urut=['belum','modif','sudah','tayang'];
@@ -888,6 +1154,336 @@ function renderScript(){
     isi.onclick=()=>{ isi.classList.toggle('open'); const f=isi.querySelector('.fade'); if(f) f.style.display=isi.classList.contains('open')?'none':'block'; };
   });
 }
+
+/* ===================== OCR ===================== */
+const BUANG=[/^online$/i,/^mengetik/i,/^ketik pesan/i,/^tulis pesan/i,/^hari ini$/i,/^kemarin$/i,
+             /^terkirim$/i,/^dibaca$/i,/^balas$/i,/^teruskan$/i,/^pesan ini telah dihapus/i,
+             /^\d{1,2}[:.]\d{2}(\s?(am|pm|wib|wita|wit))?$/i,
+             /^\d{1,2}[\/\-.]\d{1,2}([\/\-.]\d{2,4})?$/,
+             /^(senin|selasa|rabu|kamis|jumat|sabtu|minggu)/i,
+             /^\+?[\d\s().-]{9,}$/];
+
+function bersihkanOCR(mentah,saring,sensor){
+  let baris=String(mentah||'').replace(/\r\n?/g,'\n').split('\n').map(l=>l.replace(/[ \t]+/g,' ').trim());
+  if(saring){
+    baris=baris.filter(l=>{
+      if(!l) return true;
+      if(l.replace(/[^\p{L}\p{N}]/gu,'').length<3) return false;   // simbol, centang, garis
+      return !BUANG.some(re=>re.test(l));
+    });
+  }
+  let t=baris.join('\n').replace(/\n{3,}/g,'\n\n').trim();
+  if(sensor) t=t.replace(/(\+?\d[\d\s.-]{7,}\d)/g,m=>m.slice(0,4)+'•'.repeat(Math.max(3,m.length-6))+m.slice(-2));
+  return t;
+}
+
+async function ambilOCR(t){
+  if(isVideo(t)) throw new Error('Video tidak bisa di-OCR.');
+  if(!tersambung()) throw new Error('Sambungkan dulu Google Sheet di tab Data.');
+  if(!t.driveId){
+    const src=await idbGet(t.id);
+    if(!src) throw new Error('Gambarnya tidak ada di perangkat ini.');
+    const mime=t.mime||'image/jpeg';
+    const b64=await keBase64(src);
+    const j=await panggil('upload',{nama:'testi-'+t.id+ekstensi(mime),mime:mime,data:b64,publik:!!DB.settings.publik});
+    t.driveId=j.driveId; t.perlu=1; save(true);
+  }
+  const j=await panggil('ocr',{driveId:t.driveId,bahasa:DB.settings.bahasaOCR||'id'});
+  return String(j.teks||'').trim();
+}
+
+let ocrTarget=null, ocrMentah='';
+function segarkanOCR(){
+  $('#ocr-teks').value=bersihkanOCR(ocrMentah,$('#ocr-saring').checked,$('#ocr-sensor').checked);
+}
+['#ocr-saring','#ocr-sensor'].forEach(s=>$(s).addEventListener('change',segarkanOCR));
+
+async function ocrSatu(t){
+  toast('Membaca tulisan di gambar…');
+  try{
+    const teks=await ambilOCR(t);
+    if(!teks){ toast('Tidak ada tulisan yang terbaca di gambar itu.'); return; }
+    ocrTarget=t; ocrMentah=teks;
+    $('#ocr-asal').textContent=t.label?('Untuk: '+t.label):'Testi tanpa label';
+    segarkanOCR();
+    $('#scrim-ocr').classList.add('on');
+  }catch(e){ toast(e.message); }
+}
+function terapkanOCR(ganti){
+  if(!ocrTarget) return;
+  const teks=$('#ocr-teks').value.trim();
+  ocrTarget.keterangan=ganti?teks:((ocrTarget.keterangan||'')+(ocrTarget.keterangan?'\n\n':'')+teks).trim();
+  ocrTarget.diubah=Date.now(); ocrTarget.perlu=1;
+  save(true); renderTesti();
+  $('#scrim-ocr').classList.remove('on');
+  toast('Keterangan diperbarui.');
+}
+$('#ocr-ganti').onclick =()=>terapkanOCR(true);
+$('#ocr-tambah').onclick=()=>terapkanOCR(false);
+
+async function ocrBanyak(daftar){
+  const antre=daftar.filter(t=>t&&!isVideo(t)&&adaMedia(t));
+  if(!antre.length){ toast('Tidak ada gambar yang bisa di-OCR di pilihan itu.'); return; }
+  const timpa=antre.some(t=>String(t.keterangan||'').trim())
+    ? confirm('Sebagian sudah punya keterangan.\n\nOK = timpa keterangan lama.\nBatal = hanya isi yang masih kosong.')
+    : true;
+  let isi=0,lewat=0,gagal=0;
+  for(let i=0;i<antre.length;i++){
+    const t=antre[i];
+    toast('OCR '+(i+1)+' dari '+antre.length+'…');
+    if(!timpa&&String(t.keterangan||'').trim()){ lewat++; continue; }
+    try{
+      const teks=await ambilOCR(t);
+      const bersih=bersihkanOCR(teks,true,true);
+      if(!bersih){ gagal++; continue; }
+      t.keterangan=bersih; t.diubah=Date.now(); t.perlu=1; isi++;
+    }catch(e){ gagal++; if(gagal===1) toast(e.message); }
+  }
+  save(true); renderTesti();
+  toast(isi+' keterangan terisi'+(lewat?', '+lewat+' dilewati':'')+(gagal?', '+gagal+' gagal':'')+'.');
+}
+$('#pilih-ocr').onclick=()=>{
+  if(tab!=='testi'){ toast('OCR hanya untuk testi bergambar.'); return; }
+  if(!dipilih.size){ toast('Centang dulu gambar yang mau dibaca.'); return; }
+  ocrBanyak(Array.from(dipilih).map(id=>DB.testi.find(x=>x.id===id)));
+};
+
+/* ===================== MODE PILIH & HAPUS ===================== */
+let pilihMode=false;
+const dipilih=new Set();
+const tampil={testi:[],customer:[],script:[]};
+
+function tandaiHapus(tipe,o){
+  DB.antri[tipe].push({ id:o.id, hapus:true, diubah:Date.now() });
+}
+async function buangDrive(daftar){
+  for(const id of daftar){
+    try{ await panggil('hapusGambar',{driveId:id}); }catch(e){}
+  }
+}
+function setPilih(on){
+  pilihMode=on;
+  dipilih.clear();
+  document.body.classList.toggle('memilih',on);
+  $('#pilih-bar').hidden=!on;
+  ['testi','script','customer'].forEach(k=>{
+    const b=$('#pilih-'+k); if(b) b.textContent=(on&&tab===k)?'Batal pilih':'Pilih';
+  });
+  $('#pilih-drive-w').style.display=(tab==='testi')?'':'none';
+  $('#pilih-ocr').style.display=(tab==='testi')?'':'none';
+  segarkanPilih(); render();
+}
+function segarkanPilih(){
+  $('#pilih-jml').textContent=dipilih.size+' dipilih';
+  $('#pilih-hapus').disabled=!dipilih.size;
+  $('#pilih-hapus').style.opacity=dipilih.size?'1':'.45';
+  $$('.blok,.card').forEach(el=>el.classList.toggle('dipilih',dipilih.has(el.dataset.id)));
+}
+function kotakPilih(id){
+  return pilihMode
+    ? '<label class="tick"><input type="checkbox" data-pilih="'+id+'"'+(dipilih.has(id)?' checked':'')+'></label>'
+    : '';
+}
+function pasangPilih(akar){
+  akar.querySelectorAll('[data-pilih]').forEach(c=>c.onchange=()=>{
+    c.checked?dipilih.add(c.dataset.pilih):dipilih.delete(c.dataset.pilih);
+    segarkanPilih();
+  });
+}
+$('#pilih-semua').onclick=()=>{ tampil[tab].forEach(id=>dipilih.add(id)); render(); segarkanPilih(); };
+$('#pilih-nihil').onclick=()=>{ dipilih.clear(); render(); segarkanPilih(); };
+$('#pilih-batal').onclick=()=>setPilih(false);
+$('#pilih-hapus').onclick=async()=>{
+  const tipe=tab, ids=Array.from(dipilih);
+  if(!ids.length) return;
+  const jugaDrive=(tipe==='testi')&&$('#pilih-drive').checked&&tersambung();
+  if(!confirm('Hapus '+ids.length+' catatan'+(jugaDrive?' beserta filenya di Drive':'')+'?\n\nTidak bisa dibatalkan.')) return;
+
+  const berkas=[];
+  ids.forEach(id=>{
+    const o=DB[tipe].find(x=>x.id===id); if(!o) return;
+    if(tipe==='testi'){ idbDel(id); if(jugaDrive&&o.driveId) berkas.push(o.driveId); }
+    tandaiHapus(tipe,o);
+  });
+  DB[tipe]=DB[tipe].filter(x=>!dipilih.has(x.id));
+  dipilih.clear();
+  save(true); setPilih(false);
+  toast(ids.length+' catatan terhapus.');
+  if(berkas.length){ await buangDrive(berkas); toast(berkas.length+' file Drive ikut dibuang.'); }
+};
+['testi','script','customer'].forEach(k=>{
+  const b=$('#pilih-'+k); if(b) b.onclick=()=>setPilih(!(pilihMode&&tab===k));
+});
+
+/* ===================== IMPOR MARKDOWN ===================== */
+/* Mengenali pola:  ## SCRIPT 49 — Hari 107 (jadi tempat orang pulang)
+   Judul bagian lain (CATATAN PRODUKSI dan sejenisnya) diabaikan. */
+function uraikanMD(teks){
+  const baris=String(teks||'').replace(/\r\n?/g,'\n').split('\n');
+  let seri='';
+  for(const l of baris){
+    if(l.indexOf('# ')===0){
+      const m=l.match(/season\s*(\d+)/i)||l.match(/bulan\s*(\d+)/i);
+      if(m) seri=(/season/i.test(l)?'Season ':'Bulan ')+m[1];
+      break;
+    }
+  }
+  const item=[]; let cur=null;
+  const tutup=()=>{ if(cur){ cur.mentah=cur.buf.join('\n').trim(); delete cur.buf; if(cur.mentah) item.push(cur); cur=null; } };
+  baris.forEach(l=>{
+    const h=l.match(/^#{2,3}\s*SCRIPT\s*#?\s*(\d+)\s*[—–:-]?\s*(.*)$/i);
+    if(h){
+      tutup();
+      let sisa=(h[2]||'').trim(), hari='', judul=sisa;
+      const mh=sisa.match(/^Hari\s+([0-9\u2013\u2014-]+)\s*(.*)$/i);
+      if(mh){ hari=mh[1].replace(/[\u2013\u2014]/g,'-'); judul=(mh[2]||'').trim(); }
+      judul=judul.replace(/^\(([\s\S]*)\)$/,'$1').trim();
+      cur={nomor:Number(h[1]),hari:hari,judul:judul,buf:[]};
+      return;
+    }
+    if(/^#{1,6}\s/.test(l)){ tutup(); return; }
+    if(cur){ if(/^-{3,}\s*$/.test(l)){ tutup(); return; } cur.buf.push(l); }
+  });
+  tutup();
+  return {seri:seri,item:item};
+}
+function pisahHook(mentah){
+  const blok=String(mentah).split(/\n[ \t]*\n/);
+  return { hook:(blok[0]||'').trim(), isi:blok.slice(1).join('\n\n').trim() };
+}
+function rakitScript(it,seri,pisah,status){
+  const mentah=rapikanNaskah(it.mentah);
+  const bagi=pisah?pisahHook(mentah):{hook:'',isi:mentah};
+  return {
+    id:uid(),
+    nomor:it.nomor,
+    judul:'Script '+it.nomor+(it.judul?' — '+it.judul:''),
+    seri:seri||'',
+    status:status||'belum',
+    hook:bagi.hook,
+    isi:bagi.isi,
+    tag:it.hari?'Hari '+it.hari:'',
+    tanggal:today(),
+    diubah:Date.now(),
+    perlu:1
+  };
+}
+
+let imporSumber=[];   // {id,nama,seri,item[]}
+
+function bacaBerkas(f){
+  return new Promise(res=>{
+    const r=new FileReader();
+    r.onload=e=>res(String(e.target.result));
+    r.onerror=()=>res('');
+    r.readAsText(f);
+  });
+}
+function pasangSumber(id,nama,teks){
+  imporSumber=imporSumber.filter(s=>s.id!==id);
+  if(!String(teks).trim()) return;
+  const h=uraikanMD(teks);
+  imporSumber.push({id:id,nama:nama,seri:h.seri,item:h.item});
+}
+function segarkanBerkas(){
+  const kotak=$('#imp-berkas');
+  const berkas=imporSumber.filter(s=>s.id!=='tempel');
+  if(!berkas.length){ kotak.innerHTML=''; return; }
+  kotak.innerHTML=berkas.map(s=>
+    '<div class="row" style="gap:6px;margin-bottom:5px;font-size:12.5px">'
+    +'<span class="tag">'+s.item.length+'</span>'
+    +'<span style="color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:230px">'+esc(s.nama)+'</span>'
+    +(s.seri?'<span class="meta">'+esc(s.seri)+'</span>':'')
+    +'<span class="spacer"></span>'
+    +'<button class="btn sm ghost danger" data-buang="'+s.id+'">Buang</button></div>').join('');
+  kotak.querySelectorAll('[data-buang]').forEach(b=>b.onclick=()=>{
+    imporSumber=imporSumber.filter(s=>s.id!==b.dataset.buang);
+    segarkanImpor();
+  });
+}
+function segarkanImpor(){
+  segarkanBerkas();
+  const paksa=$('#imp-seri').value.trim();
+  const pisah=$('#imp-pisah').checked, lewati=$('#imp-lewati').checked;
+  const kotak=$('#imp-pratinjau');
+  const total=imporSumber.reduce((a,s)=>a+s.item.length,0);
+
+  if(!total){
+    kotak.textContent=imporSumber.length||$('#imp-teks').value.trim()
+      ? 'Tidak menemukan pola "## SCRIPT <nomor>". Cek lagi format filenya.'
+      : 'Belum ada file atau tempelan.';
+    $('#imp-jalan').textContent='Impor';
+    return;
+  }
+
+  const dipakai=new Set();
+  let baru=0, bagian=[];
+  imporSumber.forEach(s=>{
+    const seri=paksa||s.seri||'';
+    const isi=s.item.map(it=>{
+      const kunci=seri+'#'+it.nomor;
+      const dobel=lewati&&(dipakai.has(kunci)||DB.script.some(x=>Number(x.nomor)===it.nomor&&String(x.seri||'')===seri));
+      if(!dobel){ baru++; dipakai.add(kunci); }
+      const sc=rakitScript(it,seri,pisah,'belum');
+      const cuplik=(sc.hook||sc.isi).split('\n').slice(0,2).join(' / ');
+      return '<div style="margin-bottom:8px'+(dobel?';opacity:.35':'')+'">'
+        +'<span style="color:var(--brass)">'+String(it.nomor).padStart(2,'0')+'</span> '
+        +esc(it.judul||'tanpa judul')
+        +(it.hari?' <span style="color:var(--dimmer)">· Hari '+esc(it.hari)+'</span>':'')
+        +(dobel?' <span style="color:var(--clay)">· sudah ada</span>':'')
+        +'<br><span style="color:var(--dimmer)">'+esc(cuplik.slice(0,88))+'…</span></div>';
+    }).join('');
+    bagian.push('<div style="color:var(--text);border-bottom:1px solid var(--line);margin:0 0 9px;padding-bottom:5px">'
+      +esc(s.nama)+(seri?' <span style="color:var(--dimmer)">· '+esc(seri)+'</span>':'')+'</div>'+isi);
+  });
+  kotak.innerHTML=bagian.join('<div style="height:12px"></div>');
+  $('#imp-jalan').textContent=baru?'Impor '+baru+' script':'Tidak ada yang baru';
+}
+
+$('#impor-md').onclick=()=>{
+  $('#imp-status').innerHTML=Object.keys(STATUS).map(k=>'<option value="'+k+'">'+STATUS[k].label+'</option>').join('');
+  $('#scrim-impor').classList.add('on');
+  segarkanImpor();
+};
+$('#imp-teks').addEventListener('input',()=>{
+  pasangSumber('tempel','Tempelan',$('#imp-teks').value);
+  segarkanImpor();
+});
+['#imp-seri','#imp-pisah','#imp-lewati'].forEach(s=>$(s).addEventListener('input',segarkanImpor));
+$('#imp-pilih').onclick=()=>$('#file-md').click();
+$('#file-md').onchange=async e=>{
+  const daftar=Array.prototype.slice.call(e.target.files);
+  e.target.value='';
+  for(const f of daftar){
+    const teks=await bacaBerkas(f);
+    pasangSumber('f-'+uid(),f.name,teks);
+  }
+  segarkanImpor();
+  const n=imporSumber.filter(s=>s.id!=='tempel').length;
+  toast(daftar.length+' file dibaca, total '+n+' sumber siap.');
+};
+$('#imp-kosongkan').onclick=()=>{ imporSumber=[]; $('#imp-teks').value=''; $('#imp-seri').value=''; segarkanImpor(); };
+$('#imp-jalan').onclick=()=>{
+  const paksa=$('#imp-seri').value.trim();
+  const pisah=$('#imp-pisah').checked, lewati=$('#imp-lewati').checked;
+  const status=$('#imp-status').value||'belum';
+  const dipakai=new Set();
+  let masuk=0,lewat=0;
+  imporSumber.forEach(s=>{
+    const seri=paksa||s.seri||'';
+    s.item.forEach(it=>{
+      const kunci=seri+'#'+it.nomor;
+      if(lewati&&(dipakai.has(kunci)||DB.script.some(x=>Number(x.nomor)===it.nomor&&String(x.seri||'')===seri))){ lewat++; return; }
+      dipakai.add(kunci);
+      DB.script.push(rakitScript(it,seri,pisah,status)); masuk++;
+    });
+  });
+  if(!masuk){ toast(lewat?'Semua nomor itu sudah ada.':'Tidak ada yang bisa diimpor.'); return; }
+  save(true); renderScript();
+  $('#scrim-impor').classList.remove('on');
+  imporSumber=[]; $('#imp-teks').value='';
+  toast(masuk+' script masuk'+(lewat?', '+lewat+' dilewati karena sudah ada.':'.'));
+};
 
 /* ===================== EKSPOR ===================== */
 const kolomCust=()=>['Tanggal','Nama','WhatsApp','Produk','Harga','Alasan Beli','Sumber','Fase','Status','Catatan'];
@@ -928,13 +1524,16 @@ $('#wipe').onclick=()=>{
   if(!confirm('Yakin? Unduh cadangan dulu kalau belum.')) return;
   DB.testi.forEach(t=>idbDel(t.id));
   const s=DB.settings;
-  DB={testi:[],customer:[],script:[],settings:s};
+  DB={testi:[],customer:[],script:[],settings:s,antri:{testi:[],customer:[],script:[]}};
+  dipilih.clear();
   save(true); render(); toast('Data lokal terhapus.'); };
 
 /* ===================== NAVIGASI ===================== */
 const PH={testi:'Cari label atau #tag…',customer:'Cari nama, produk, atau alasan…',script:'Cari judul, hook, atau isi…',data:'Cari…'};
 function gotoTab(t){
   tab=t;
+  if(pilihMode){ pilihMode=false; dipilih.clear(); document.body.classList.remove('memilih');
+    $('#pilih-bar').hidden=true; ['testi','script','customer'].forEach(k=>{ const b=$('#pilih-'+k); if(b) b.textContent='Pilih'; }); }
   $$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
   ['testi','customer','script','data'].forEach(k=>$('#tab-'+k).hidden=(k!==t));
   $('#q').placeholder=PH[t];
@@ -947,14 +1546,20 @@ $('#add-btn').onclick=()=>{
   else if(tab==='data') gotoTab('testi');
   else bukaForm(tab);
 };
+$('#script-urut').onclick=()=>{
+  urutNomor=!urutNomor;
+  $('#script-urut').textContent=urutNomor?'Urut: nomor':'Urut: terbaru';
+  renderScript();
+};
 $('#q').oninput=e=>{ cari=e.target.value; render(); };
 $$('[data-close]').forEach(b=>b.onclick=()=>$('#'+b.dataset.close).classList.remove('on'));
 $$('.scrim').forEach(s=>s.onclick=e=>{ if(e.target===s) s.classList.remove('on'); });
-$('#lightbox').onclick=()=>$('#lightbox').classList.remove('on');
+function tutupLightbox(){ $('#lightbox').classList.remove('on'); $('#lightbox-isi').innerHTML=''; }
+$('#lightbox').onclick=tutupLightbox;
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     $$('.scrim.on').forEach(s=>s.classList.remove('on'));
-    $('#lightbox').classList.remove('on');
+    tutupLightbox();
     if($('#tp').classList.contains('on')) $('#tp-close').click();
     return;
   }
@@ -969,10 +1574,12 @@ function render(){ renderTesti(); renderCustomer(); renderScript(); catatanSimpa
 
 (async function mulai(){
   await bukaIDB();
+  (await idbKunci()).forEach(k=>punyaLokal.add(String(k)));
   $('#s-url').value=DB.settings.url||'';
   $('#s-token').value=DB.settings.token||'';
   $('#s-auto').checked=DB.settings.auto!==false;
   $('#s-publik').checked=DB.settings.publik!==false;
+  $('#s-ocr').value=DB.settings.bahasaOCR||'id';
   if(memoryOnly)
     $('#banner-slot').innerHTML='<div class="banner"><b>Data belum tersimpan permanen.</b> Browser ini memblokir simpanan lokal, biasa terjadi di jendela pratinjau. Unduh file <span style="font-family:var(--mono)">meja-kerja.html</span> lalu buka dari komputer atau servermu.</div>';
   gotoTab('testi');
