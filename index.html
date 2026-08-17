@@ -34,7 +34,8 @@ a{color:var(--brass)}
 .nav .n{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--dimmer)}
 .rail-foot{margin-top:auto;font-family:var(--mono);font-size:10px;color:var(--dimmer);padding:0 8px;line-height:1.7}
 .main{flex:1;min-width:0;display:flex;flex-direction:column}
-.topbar{position:sticky;top:0;z-index:20;background:rgba(16,17,25,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:12px 24px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.atas{position:sticky;top:0;z-index:30;background:rgba(16,17,25,.93);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.topbar{padding:12px 24px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .search{flex:1;min-width:170px;display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:7px 12px}
 .search input{background:none;border:none;outline:none;width:100%}
 .search input::placeholder{color:var(--dimmer)}
@@ -141,17 +142,18 @@ textarea{resize:vertical;min-height:96px;line-height:1.6}
 .grup{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--brass);
   margin:26px 0 9px;padding-bottom:6px;border-bottom:1px solid var(--line)}
 .grup.awal{margin-top:0}
+.bar{height:6px;background:var(--bg);border:1px solid var(--line);border-radius:100px;overflow:hidden;margin:2px 0 12px}
+.bar i{display:block;height:100%;background:var(--brass);width:0;transition:width .25s}
 .pilcrow{color:var(--clay);opacity:.75}
 .brk{color:var(--dimmer)}
-.pilih-bar{position:sticky;top:58px;z-index:19;display:flex;gap:8px;align-items:center;flex-wrap:wrap;
-  background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin-bottom:16px}
+.pilih-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  background:rgba(30,33,48,.75);border-top:1px solid var(--line);padding:9px 24px}
 .pilih-bar .jml{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--brass)}
 .tick{display:inline-flex;align-items:center;margin:0 10px 0 0;cursor:pointer}
 .tick input{accent-color:var(--brass);width:17px;height:17px;cursor:pointer}
 .blok.dipilih,.card.dipilih{border-color:var(--brass)}
 .blok.dipilih{background:rgba(201,164,92,.05);border-radius:12px;padding-left:12px;padding-right:12px}
 body.memilih .lbl,body.memilih .ket{opacity:.75}
-.pilih-bar{scroll-margin-top:70px}
 
 .tp{position:fixed;inset:0;background:#0A0B10;z-index:90;display:none;flex-direction:column}
 .tp.on{display:flex}
@@ -190,6 +192,9 @@ details.help .in{padding:0 15px 15px}
   .nav button.on{color:var(--brass)}
   .content{padding:18px 15px 96px}
   .topbar{padding:10px 15px}
+  .pilih-bar{padding:9px 15px;gap:6px}
+  .pilih-bar .spacer{display:none}
+  .pilih-bar .sw{font-size:12px}
   .no{display:none}
   .grid2,.fmt-grid{grid-template-columns:1fr}
   .blok-act{opacity:1}
@@ -215,26 +220,28 @@ details.help .in{padding:0 15px 15px}
   </aside>
 
   <main class="main">
+    <div class="atas">
     <div class="topbar">
       <div class="search"><span style="color:var(--dimmer)">⌕</span>
         <input id="q" type="text" placeholder="Cari label atau #tag…" autocomplete="off"><span class="slash">/</span></div>
       <button class="pill" id="sync-pill">Lokal saja</button>
       <button class="btn primary" id="add-btn">+ Tambah</button>
     </div>
+    <div class="pilih-bar" id="pilih-bar" hidden>
+      <span class="jml" id="pilih-jml">0 dipilih</span>
+      <button class="btn sm" id="pilih-semua">Pilih semua yang tampil</button>
+      <button class="btn sm ghost" id="pilih-nihil">Kosongkan pilihan</button>
+      <span class="spacer"></span>
+      <label class="sw" id="pilih-drive-w" style="margin:0"><input type="checkbox" id="pilih-drive">Hapus juga di Drive</label>
+      <button class="btn sm" id="pilih-ocr">OCR terpilih</button>
+      <button class="btn sm danger" id="pilih-hapus">Hapus</button>
+      <button class="btn sm ghost" id="pilih-batal">Selesai</button>
+    </div>
+    </div>
 
     <div class="content">
       <div id="banner-slot"></div>
 
-      <div class="pilih-bar" id="pilih-bar" hidden>
-        <span class="jml" id="pilih-jml">0 dipilih</span>
-        <button class="btn sm" id="pilih-semua">Pilih semua yang tampil</button>
-        <button class="btn sm ghost" id="pilih-nihil">Kosongkan pilihan</button>
-        <span class="spacer"></span>
-        <label class="sw" id="pilih-drive-w" style="margin:0"><input type="checkbox" id="pilih-drive">Hapus juga di Drive</label>
-        <button class="btn sm" id="pilih-ocr">OCR terpilih</button>
-        <button class="btn sm danger" id="pilih-hapus">Hapus</button>
-        <button class="btn sm ghost" id="pilih-batal">Selesai</button>
-      </div>
 
       <section id="tab-testi">
         <div class="row">
@@ -296,6 +303,7 @@ details.help .in{padding:0 15px 15px}
           <label class="sw"><input type="checkbox" id="s-publik" checked>Setel gambar di Drive jadi bisa dilihat lewat link</label>
           <label style="margin-top:10px"><span class="l">Bahasa OCR</span>
             <select id="s-ocr"><option value="id">Indonesia</option><option value="en">Inggris</option><option value="ms">Melayu</option></select></label>
+          <label class="sw"><input type="checkbox" id="s-tinjau">Tinjau dulu hasil OCR sebelum masuk ke keterangan</label>
           <div class="hint" style="margin-top:-4px">OCR memakai layanan Drive. Sekali saja: di editor Apps Script buka <b>Services</b>, tambahkan <b>Drive API</b>, lalu deploy versi baru.</div>
           <div class="hint" style="margin-top:-4px">Perlu menyala kalau kamu mau melihat gambarnya dari HP atau laptop lain. Kalau dimatikan, Drive hanya jadi cadangan dan gambar cuma tampil di perangkat tempat kamu mengunggahnya.</div>
           <div class="card-actions">
@@ -457,6 +465,18 @@ details.help .in{padding:0 15px 15px}
     <button class="btn" id="k-salin">Salin teks</button>
     <span class="spacer"></span>
     <button class="btn ghost" data-close="scrim-kirim">Tutup</button>
+  </div></div></div>
+
+<div class="scrim" id="scrim-proses"><div class="sheet" style="max-width:560px">
+  <h2 id="proses-judul">Memproses</h2>
+  <div class="bar"><i id="proses-isi"></i></div>
+  <p class="hint" id="proses-info" style="margin:0 0 6px">Menyiapkan…</p>
+  <p class="hint" id="proses-kini" style="margin:0 0 14px;color:var(--dim)">&nbsp;</p>
+  <div class="preview" id="proses-log" style="max-height:170px;display:none"></div>
+  <div class="sheet-actions" style="margin-top:14px">
+    <button class="btn danger" id="proses-stop">Hentikan</button>
+    <span class="spacer"></span>
+    <button class="btn" id="proses-tutup" hidden>Tutup</button>
   </div></div></div>
 
 <div class="lightbox" id="lightbox"><div id="lightbox-isi"></div></div>
@@ -645,7 +665,7 @@ $('#tp-close').onclick=()=>{ tpJalan=false; cancelAnimationFrame(tpRaf); $('#tp'
 $('#tp-size').oninput=e=>document.documentElement.style.setProperty('--tp-size',e.target.value+'px');
 
 /* ===================== SINKRON ===================== */
-let sinkronJalan=false, sinkronTimer=null;
+let sinkronJalan=false, sinkronTimer=null, jedaSinkron=false;
 const tersambung=()=>!!(DB.settings.url && DB.settings.token);
 const menunggu=()=>DB.testi.filter(x=>x.perlu).length+DB.customer.filter(x=>x.perlu).length+DB.script.filter(x=>x.perlu).length
   +DB.antri.testi.length+DB.antri.customer.length+DB.antri.script.length;
@@ -657,19 +677,29 @@ function segarkanPill(){
   if(n) return pillSinkron('wait',n+' menunggu');
   pillSinkron('ok',DB.settings.sinkronTerakhir?'Tersinkron '+new Date(DB.settings.sinkronTerakhir).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}):'Tersambung');
 }
-function antreSinkron(){ if(!tersambung()) return segarkanPill();
+function antreSinkron(){ if(!tersambung()||jedaSinkron) return segarkanPill();
   clearTimeout(sinkronTimer); sinkronTimer=setTimeout(()=>sinkronkan(true),2500); segarkanPill(); }
 
-async function panggil(action,body){
+async function panggil(action,body,ms){
   const url=String(DB.settings.url).trim();
   const muatan=Object.assign({action:action,token:DB.settings.token},body||{});
-  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(muatan),redirect:'follow'});
+  let ac=null,jam=null;
+  try{ ac=new AbortController(); jam=setTimeout(()=>ac.abort(),ms||120000); }catch(e){ ac=null; }
+  let r;
+  try{
+    r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(muatan),redirect:'follow',signal:ac?ac.signal:undefined});
+  }catch(e){
+    if(e&&e.name==='AbortError') throw new Error('Waktu tunggu habis. Apps Script atau jaringan sedang lambat.');
+    throw new Error('Tidak bisa menghubungi Apps Script. Cek koneksi.');
+  }finally{ if(jam) clearTimeout(jam); }
   const teks=await r.text();
   let j; try{ j=JSON.parse(teks); }
   catch(e){ throw new Error('Balasan tidak terbaca. Pastikan URL berakhiran /exec dan aksesnya disetel Anyone.'); }
   if(!j.ok) throw new Error(j.error||'Gagal.');
   return j;
 }
+const tidur=ms=>new Promise(r=>setTimeout(r,ms));
 function bersih(rec){ const o={}; Object.keys(rec).forEach(k=>{ if(k!=='perlu'&&k!=='adaGambar'&&k[0]!=='_') o[k]=rec[k]; }); return o; }
 
 async function sinkronkan(diam){
@@ -731,7 +761,7 @@ $('#sync-pill').onclick=()=>{ if(!tersambung()) gotoTab('data'); else sinkronkan
 $('#s-save').onclick=()=>{
   DB.settings.url=$('#s-url').value.trim(); DB.settings.token=$('#s-token').value.trim();
   DB.settings.auto=$('#s-auto').checked; DB.settings.publik=$('#s-publik').checked;
-  DB.settings.bahasaOCR=$('#s-ocr').value;
+  DB.settings.bahasaOCR=$('#s-ocr').value; DB.settings.tinjauOCR=$('#s-tinjau').checked;
   tulis(DB); segarkanPill(); toast(tersambung()?'Sambungan tersimpan.':'Alamat atau token masih kosong.');
 };
 $('#s-test').onclick=async()=>{
@@ -842,7 +872,7 @@ function pasangBlok(el,t){
   el.querySelector('[data-a=salin]').onclick=()=>salinPolos(teksTesti());
   el.querySelector('[data-a=ganti]').onclick=()=>{ gantiUntuk=t.id; $('#file-images').click(); };
   const tOcr=el.querySelector('[data-a=ocr]');
-  if(tOcr) tOcr.onclick=()=>ocrSatu(t);
+  if(tOcr) tOcr.onclick=()=>ocrSatu(t,tOcr);
   el.querySelector('[data-a=hapus]').onclick=async()=>{
     const apa=isVideo(t)?'video':'testi';
     if(!confirm('Hapus '+apa+' ini?')) return;
@@ -1307,7 +1337,7 @@ async function ambilOCR(t){
     const mime=t.mime||'image/jpeg';
     const b64=await keBase64(src);
     const j=await panggil('upload',{nama:'testi-'+t.id+ekstensi(mime),mime:mime,data:b64,publik:!!DB.settings.publik});
-    t.driveId=j.driveId; t.perlu=1; save(true);
+    t.driveId=j.driveId; t.perlu=1; tulis(DB);
   }
   const j=await panggil('ocr',{driveId:t.driveId,bahasa:DB.settings.bahasaOCR||'id'});
   return String(j.teks||'').trim();
@@ -1319,54 +1349,143 @@ function segarkanOCR(){
 }
 ['#ocr-saring','#ocr-sensor'].forEach(s=>$(s).addEventListener('change',segarkanOCR));
 
-async function ocrSatu(t){
-  toast('Membaca tulisan di gambar…');
+/* Tulis langsung ke blok yang bersangkutan, tanpa menggambar ulang
+   seluruh lembar — supaya posisi gulirmu tidak lompat. */
+function isiKeterangan(t,teks,ganti){
+  const lama=String(t.keterangan||'').trim();
+  t.keterangan = ganti ? teks : (lama ? lama+'\n\n'+teks : teks);
+  t.diubah=Date.now(); t.perlu=1;
+  save(true);
+  const el=document.querySelector('.blok[data-id="'+t.id+'"]');
+  if(el){
+    const k=el.querySelector('[data-f=keterangan]');
+    if(k) k.textContent=t.keterangan;
+    segarkanHash(el,t);
+  }
+  return !!lama;
+}
+
+async function ocrSatu(t,tombol){
+  const semula=tombol?tombol.textContent:'';
+  if(tombol){ tombol.disabled=true; tombol.textContent='Membaca…'; }
   try{
-    const teks=await ambilOCR(t);
-    if(!teks){ toast('Tidak ada tulisan yang terbaca di gambar itu.'); return; }
-    ocrTarget=t; ocrMentah=teks;
-    $('#ocr-asal').textContent=t.label?('Untuk: '+t.label):'Testi tanpa label';
-    segarkanOCR();
-    $('#scrim-ocr').classList.add('on');
+    const mentah=await ambilOCR(t);
+    const bersih=bersihkanOCR(mentah,true,true);
+    if(!bersih){ toast('Tidak ada tulisan yang terbaca di gambar itu.'); return; }
+
+    if(DB.settings.tinjauOCR){
+      ocrTarget=t; ocrMentah=mentah;
+      $('#ocr-asal').textContent=t.label?('Untuk: '+t.label):'Testi tanpa label';
+      segarkanOCR();
+      $('#scrim-ocr').classList.add('on');
+      return;
+    }
+    const adaIsi=isiKeterangan(t,bersih,false);
+    toast(adaIsi?'Hasil OCR ditambahkan di bawah keterangan.':'Keterangan terisi dari gambar.');
   }catch(e){ toast(e.message); }
+  finally{ if(tombol){ tombol.disabled=false; tombol.textContent=semula||'OCR'; } }
 }
 function terapkanOCR(ganti){
   if(!ocrTarget) return;
-  const teks=$('#ocr-teks').value.trim();
-  ocrTarget.keterangan=ganti?teks:((ocrTarget.keterangan||'')+(ocrTarget.keterangan?'\n\n':'')+teks).trim();
-  ocrTarget.diubah=Date.now(); ocrTarget.perlu=1;
-  save(true); renderTesti();
+  isiKeterangan(ocrTarget,$('#ocr-teks').value.trim(),ganti);
   $('#scrim-ocr').classList.remove('on');
   toast('Keterangan diperbarui.');
 }
 $('#ocr-ganti').onclick =()=>terapkanOCR(true);
 $('#ocr-tambah').onclick=()=>terapkanOCR(false);
 
+/* ---- panel kemajuan ---- */
+let prosesBatal=false;
+function bukaProses(judul){
+  prosesBatal=false;
+  $('#proses-judul').textContent=judul;
+  $('#proses-isi').style.width='0%';
+  $('#proses-info').textContent='Menyiapkan…';
+  $('#proses-kini').innerHTML='&nbsp;';
+  $('#proses-log').innerHTML=''; $('#proses-log').style.display='none';
+  $('#proses-stop').hidden=false; $('#proses-tutup').hidden=true;
+  $('#scrim-proses').classList.add('on');
+}
+function majuProses(n,total,info,kini){
+  $('#proses-isi').style.width=Math.round(n/total*100)+'%';
+  $('#proses-info').textContent=info;
+  $('#proses-kini').textContent=kini||'';
+}
+function catatProses(pesan){
+  const log=$('#proses-log');
+  log.style.display='block';
+  log.innerHTML+=esc(pesan)+'\n';
+  log.scrollTop=log.scrollHeight;
+}
+function tutupProses(ringkas){
+  $('#proses-isi').style.width='100%';
+  $('#proses-info').textContent=ringkas;
+  $('#proses-kini').innerHTML='&nbsp;';
+  $('#proses-stop').hidden=true; $('#proses-tutup').hidden=false;
+}
+$('#proses-stop').onclick=()=>{ prosesBatal=true; $('#proses-info').textContent='Menghentikan setelah gambar ini selesai…'; };
+$('#proses-tutup').onclick=()=>$('#scrim-proses').classList.remove('on');
+
 async function ocrBanyak(daftar){
+  if(!tersambung()){ toast('Sambungkan dulu Google Sheet di tab Data.'); return; }
   const antre=daftar.filter(t=>t&&!isVideo(t)&&adaMedia(t));
+  const bukanGambar=daftar.length-antre.length;
   if(!antre.length){ toast('Tidak ada gambar yang bisa di-OCR di pilihan itu.'); return; }
-  const timpa=antre.some(t=>String(t.keterangan||'').trim())
-    ? confirm('Sebagian sudah punya keterangan.\n\nOK = timpa keterangan lama.\nBatal = hanya isi yang masih kosong.')
-    : true;
-  let isi=0,lewat=0,gagal=0;
-  for(let i=0;i<antre.length;i++){
-    const t=antre[i];
-    toast('OCR '+(i+1)+' dari '+antre.length+'…');
-    if(!timpa&&String(t.keterangan||'').trim()){ lewat++; continue; }
-    try{
-      const teks=await ambilOCR(t);
-      const bersih=bersihkanOCR(teks,true,true);
-      if(!bersih){ gagal++; continue; }
-      t.keterangan=bersih; t.diubah=Date.now(); t.perlu=1; isi++;
-    }catch(e){ gagal++; if(gagal===1) toast(e.message); }
+
+  const sudahIsi=antre.filter(t=>String(t.keterangan||'').trim()).length;
+  let timpa=false;
+  if(sudahIsi){
+    timpa=confirm(sudahIsi+' dari '+antre.length+' sudah punya keterangan.\n\n'
+      +'OK = baca ulang semuanya dan timpa keterangan lama.\n'
+      +'Batal = lewati yang sudah terisi, kerjakan yang kosong saja.');
   }
-  save(true); renderTesti();
-  toast(isi+' keterangan terisi'+(lewat?', '+lewat+' dilewati':'')+(gagal?', '+gagal+' gagal':'')+'.');
+  const kerja=timpa?antre:antre.filter(t=>!String(t.keterangan||'').trim());
+  if(!kerja.length){ toast('Semuanya sudah punya keterangan.'); return; }
+
+  jedaSinkron=true;                       // jangan biarkan sinkron rebutan giliran
+  bukaProses('OCR '+kerja.length+' gambar');
+  if(bukanGambar) catatProses(bukanGambar+' pilihan dilewati karena video atau tanpa gambar.');
+
+  let isi=0,kosong=0,gagal=0;
+  const mulai=Date.now();
+  for(let i=0;i<kerja.length;i++){
+    if(prosesBatal) break;
+    const t=kerja[i];
+    const lewat=(Date.now()-mulai)/1000;
+    const sisa=i?Math.round(lewat/i*(kerja.length-i)):0;
+    majuProses(i,kerja.length,
+      (i+1)+' dari '+kerja.length+(sisa?' · sisa sekitar '+(sisa>90?Math.ceil(sisa/60)+' menit':sisa+' detik'):''),
+      t.label||'(belum ada label)');
+
+    let beres=false;
+    for(let coba=1;coba<=3&&!beres;coba++){
+      try{
+        const mentah=await ambilOCR(t);
+        const bersih=bersihkanOCR(mentah,true,true);
+        if(bersih){ isiKeterangan(t,bersih,timpa); isi++; }
+        else { kosong++; catatProses('· '+(t.label||'gambar '+(i+1))+' — tidak ada tulisan terbaca'); }
+        beres=true;
+      }catch(e){
+        if(coba<3){ await tidur(900*coba); }
+        else { gagal++; catatProses('× '+(t.label||'gambar '+(i+1))+' — '+e.message); }
+      }
+    }
+    if(i%10===9) tulis(DB);
+    await tidur(200);                     // beri jeda supaya Apps Script tidak kewalahan
+  }
+
+  tulis(DB); renderTesti();
+  jedaSinkron=false;
+  const ringkas=isi+' terisi'+(kosong?', '+kosong+' kosong':'')+(gagal?', '+gagal+' gagal':'')
+    +(prosesBatal?' (dihentikan)':'');
+  tutupProses(ringkas);
+  if(gagal||kosong) catatProses('\nJalankan lagi dengan pilihan "lewati yang sudah terisi" untuk mencoba sisanya saja.');
+  antreSinkron();
 }
 $('#pilih-ocr').onclick=()=>{
   if(tab!=='testi'){ toast('OCR hanya untuk testi bergambar.'); return; }
   if(!dipilih.size){ toast('Centang dulu gambar yang mau dibaca.'); return; }
-  ocrBanyak(Array.from(dipilih).map(id=>DB.testi.find(x=>x.id===id)));
+  ocrBanyak(Array.from(dipilih).map(id=>DB.testi.find(x=>x.id===id)).filter(Boolean));
 };
 
 /* ===================== MODE PILIH & HAPUS ===================== */
@@ -1411,7 +1530,10 @@ function pasangPilih(akar){
     segarkanPilih();
   });
 }
-$('#pilih-semua').onclick=()=>{ tampil[tab].forEach(id=>dipilih.add(id)); render(); segarkanPilih(); };
+$('#pilih-semua').onclick=()=>{ tampil[tab].forEach(id=>dipilih.add(id)); render(); segarkanPilih();
+  const total=DB[tab].length;
+  toast(dipilih.size+' dipilih'+(dipilih.size<total?' dari '+total+' — sisanya tersaring oleh pencarian atau tag':''));
+};
 $('#pilih-nihil').onclick=()=>{ dipilih.clear(); render(); segarkanPilih(); };
 $('#pilih-batal').onclick=()=>setPilih(false);
 $('#pilih-hapus').onclick=async()=>{
@@ -1679,6 +1801,7 @@ function tutupLightbox(){ $('#lightbox').classList.remove('on'); $('#lightbox-is
 $('#lightbox').onclick=tutupLightbox;
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
+    if(!$('#proses-stop').hidden&&$('#scrim-proses').classList.contains('on')) return;
     $$('.scrim.on').forEach(s=>s.classList.remove('on'));
     tutupLightbox();
     if($('#tp').classList.contains('on')) $('#tp-close').click();
@@ -1702,6 +1825,7 @@ function render(){ renderTesti(); renderCustomer(); renderScript(); catatanSimpa
   $('#s-auto').checked=DB.settings.auto!==false;
   $('#s-publik').checked=DB.settings.publik!==false;
   $('#s-ocr').value=DB.settings.bahasaOCR||'id';
+  $('#s-tinjau').checked=!!DB.settings.tinjauOCR;
   if(memoryOnly)
     $('#banner-slot').innerHTML='<div class="banner"><b>Data belum tersimpan permanen.</b> Browser ini memblokir simpanan lokal, biasa terjadi di jendela pratinjau. Unduh file <span style="font-family:var(--mono)">meja-kerja.html</span> lalu buka dari komputer atau servermu.</div>';
   gotoTab('testi');
