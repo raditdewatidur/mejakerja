@@ -199,8 +199,10 @@ details.help .in{padding:0 15px 15px}
 .stab.on{color:var(--brass);border-bottom-color:var(--brass)}
 .stab .stab-n{font-size:9.5px;margin-left:5px;color:var(--dimmer);vertical-align:middle}
 .stab.on .stab-n{color:var(--brass);opacity:.6}
-.stab-add{font-size:14px;padding:7px 12px;color:var(--dimmer)}
-.stab-add:hover{color:var(--brass)}
+.stab-add{color:var(--dimmer);border:1px dashed var(--line);border-bottom-width:1px;border-radius:8px;margin:3px 0 4px 8px;padding:5px 12px}
+.stab-add:hover{color:var(--brass);border-color:var(--brass)}
+.stab-menu{margin-left:7px;padding:0 3px;color:var(--dimmer);font-size:13px;letter-spacing:1px;border-radius:4px}
+.stab-menu:hover{color:var(--brass);background:var(--surface-2)}
 .stab-ctx{position:fixed;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:4px 0;z-index:100;min-width:140px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .stab-ctx button{display:block;width:100%;text-align:left;padding:7px 14px;font-size:13px;color:var(--dim);border:none;background:none;cursor:pointer}
 .stab-ctx button:hover{background:var(--surface);color:var(--text)}
@@ -1428,7 +1430,6 @@ function renderScriptTabs(){
   const tabs=scriptTabList();
   const aktif=scriptTabAktif();
   const bar=$('#script-tabs');
-  if(!tabs.length){ bar.innerHTML=''; return; }
 
   const hitungAll=DB.script.length;
   const hitungTab=g=>DB.script.filter(s=>String(s.grup||'')===(g||'')).length;
@@ -1437,15 +1438,17 @@ function renderScriptTabs(){
   let h='<button class="stab'+(aktif===''?' on':'')+'" data-g="">Semua<span class="stab-n">'+hitungAll+'</span></button>';
   tabs.forEach(g=>{
     const n=hitungTab(g);
-    h+='<button class="stab'+(aktif===g?' on':'')+'" data-g="'+esc(g)+'">'+esc(g)+'<span class="stab-n">'+n+'</span></button>';
+    h+='<button class="stab'+(aktif===g?' on':'')+'" data-g="'+esc(g)+'">'+esc(g)+'<span class="stab-n">'+n+'</span>'
+      +(aktif===g?'<span class="stab-menu" data-menu="'+esc(g)+'" title="Ubah nama atau hapus tab">⋯</span>':'')+'</button>';
   });
   if(tanpaTab && tabs.length)
     h+='<button class="stab'+(aktif==='__tanpa__'?' on':'')+'" data-g="__tanpa__">Tanpa tab<span class="stab-n">'+tanpaTab+'</span></button>';
-  h+='<button class="stab stab-add" title="Tambah tab baru">+</button>';
+  h+='<button class="stab stab-add" title="Tambah tab baru">+ Tab baru</button>';
   bar.innerHTML=h;
 
   bar.querySelectorAll('.stab:not(.stab-add)').forEach(b=>{
-    b.onclick=()=>{
+    b.onclick=e=>{
+      if(e.target.classList.contains('stab-menu')) return;
       DB.settings.scriptTabAktif=b.dataset.g;
       tulis(DB); renderScriptTabs(); renderScript();
     };
@@ -1453,6 +1456,9 @@ function renderScriptTabs(){
       if(b.dataset.g===''||b.dataset.g==='__tanpa__') return;
       e.preventDefault(); bukaTabCtx(e,b.dataset.g);
     };
+  });
+  bar.querySelectorAll('.stab-menu').forEach(m=>{
+    m.onclick=e=>{ e.stopPropagation(); bukaTabCtx(e,m.dataset.menu); };
   });
   bar.querySelector('.stab-add').onclick=tambahScriptTab;
 }
