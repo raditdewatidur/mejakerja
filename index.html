@@ -191,6 +191,21 @@ details.help .in{padding:0 15px 15px}
 .sw input{accent-color:var(--brass);width:16px;height:16px}
 .sw:hover{color:var(--text)}
 
+/* ---------- script tab bar ---------- */
+.script-tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin:0 0 16px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.script-tabs::-webkit-scrollbar{display:none}
+.stab{font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;padding:9px 15px 8px;border:none;background:none;color:var(--dim);border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;transition:color .12s,border-color .12s;position:relative}
+.stab:hover{color:var(--text)}
+.stab.on{color:var(--brass);border-bottom-color:var(--brass)}
+.stab .stab-n{font-size:9.5px;margin-left:5px;color:var(--dimmer);vertical-align:middle}
+.stab.on .stab-n{color:var(--brass);opacity:.6}
+.stab-add{font-size:14px;padding:7px 12px;color:var(--dimmer)}
+.stab-add:hover{color:var(--brass)}
+.stab-ctx{position:fixed;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:4px 0;z-index:100;min-width:140px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.stab-ctx button{display:block;width:100%;text-align:left;padding:7px 14px;font-size:13px;color:var(--dim);border:none;background:none;cursor:pointer}
+.stab-ctx button:hover{background:var(--surface);color:var(--text)}
+.stab-ctx button.danger:hover{color:var(--clay)}
+
 @media(max-width:820px){
   .app{flex-direction:column}
   .rail{position:fixed;bottom:0;left:0;right:0;top:auto;width:100%;height:auto;flex:none;flex-direction:row;padding:8px 8px calc(8px + env(safe-area-inset-bottom));border-right:none;border-top:1px solid var(--line);z-index:50;gap:0}
@@ -288,6 +303,7 @@ details.help .in{padding:0 15px 15px}
       <section id="tab-script" hidden>
         <div class="eyebrow">Naskah</div><h1>Script</h1>
         <p class="lede">Tulis sendiri, tandai statusnya, buka teleprompter atau salin dengan enter yang benar-benar enter.</p>
+        <div class="script-tabs" id="script-tabs"></div>
         <div class="row" style="margin-bottom:16px">
           <button class="btn sm" id="impor-md">Impor dari Markdown</button>
           <button class="btn sm" id="script-urut">Urut: nomor</button>
@@ -298,6 +314,7 @@ details.help .in{padding:0 15px 15px}
         <div class="chips" id="script-chips"></div>
         <div id="script-list"></div>
       </section>
+      <div class="stab-ctx" id="stab-ctx" hidden></div>
 
       <section id="tab-data" hidden>
         <div class="eyebrow">Sambungan</div><h1>Data</h1>
@@ -433,6 +450,8 @@ details.help .in{padding:0 15px 15px}
         <label><span class="l">Status awal</span><select id="imp-status"></select></label>
       </div>
       <div class="hint">Kosongkan kolom seri kalau tiap file punya seri sendiri. Kalau diisi, semua script yang masuk pakai seri itu.</div>
+      <label><span class="l">Masukkan ke tab</span><select id="imp-tab"></select></label>
+      <div class="hint">Pilih tab tujuan untuk script yang diimpor. Tambah tab baru di halaman Script.</div>
       <label class="opt"><input type="checkbox" id="imp-pisah" checked>Paragraf pertama jadi hook, sisanya jadi isi</label>
       <label class="opt"><input type="checkbox" id="imp-lewati" checked>Lewati nomor yang sudah ada di seri yang sama</label>
     </div>
@@ -537,6 +556,8 @@ function tulis(o){ if(memoryOnly){ mem=o; return; }
 let DB = baca() || {};
 DB.testi = DB.testi || []; DB.customer = DB.customer || []; DB.script = DB.script || [];
 DB.settings = DB.settings || { url:'', token:'', auto:true, publik:true, sinkronTerakhir:0 };
+DB.settings.scriptTabs = DB.settings.scriptTabs || [];
+DB.settings.scriptTabAktif = DB.settings.scriptTabAktif || '';
 DB.antri = DB.antri || { testi:[], customer:[], script:[] };
 ['testi','customer','script'].forEach(k=>{ DB.antri[k]=DB.antri[k]||[]; });
 if (memoryOnly) mem = DB;
@@ -1250,6 +1271,7 @@ const SKEMA={
     {k:'judul',t:'text',l:'Judul script',ph:'Diam Bernyawa #12'},
     {k:'nomor',t:'number',l:'Nomor urut',ph:'49',half:1},{k:'seri',t:'text',l:'Seri / season',ph:'Season 4',half:1},
     {k:'status',t:'status',l:'Status',half:1},{k:'tanggal',t:'date',l:'Tanggal',half:1},
+    {k:'grup',t:'grup',l:'Tab',half:1},
     {k:'hook',t:'textarea',l:'Hook',rows:3},{k:'isi',t:'textarea',l:'Isi script',rows:12},
     {k:'tag',t:'text',l:'Tag',ph:'pisah pakai koma'}]}
 };
@@ -1306,7 +1328,12 @@ const LABEL_URUT={nomor:'Urut: nomor',seri:'Urut: seri & nomor',baru:'Urut: terb
 let modeUrut='nomor';
 function bukaForm(tipe,id){
   formTipe=tipe; formId=id||null;
-  const sk=SKEMA[tipe], data=(id?DB[tipe].find(x=>x.id===id):{})||{};
+  const sk=SKEMA[tipe];
+  let data=(id?DB[tipe].find(x=>x.id===id):{})||{};
+  if(!id&&tipe==='script'){
+    const at=scriptTabAktif();
+    if(at&&at!==''&&at!=='__tanpa__') data={grup:at};
+  }
   $('#form-title').textContent=(id?'Ubah ':'Tambah ')+sk.judul.toLowerCase();
   $('#form-delete').hidden=!id;
   let h='',grid=false;
@@ -1318,6 +1345,7 @@ function bukaForm(tipe,id){
     if(f.t==='textarea') h+='<textarea id="f-'+f.k+'" rows="'+(f.rows||4)+'" placeholder="'+esc(f.ph||'')+'">'+esc(v)+'</textarea>';
     else if(f.t==='select') h+='<select id="f-'+f.k+'">'+f.opt.map(o=>'<option'+(o===v?' selected':'')+'>'+esc(o)+'</option>').join('')+'</select>';
     else if(f.t==='status') h+='<select id="f-status">'+Object.keys(STATUS).map(k=>'<option value="'+k+'"'+(k===(v||'belum')?' selected':'')+'>'+STATUS[k].label+'</option>').join('')+'</select>';
+    else if(f.t==='grup') h+='<select id="f-grup"><option value="">(Tanpa tab)</option>'+(DB.settings.scriptTabs||[]).map(g=>'<option'+(g===v?' selected':'')+'>'+esc(g)+'</option>').join('')+'</select>';
     else h+='<input type="'+f.t+'" id="f-'+f.k+'" value="'+esc(v)+'" placeholder="'+esc(f.ph||'')+'">';
     h+='</label>';
     if(grid&&(!nx||!nx.half)){ h+='</div>'; grid=false; }
@@ -1392,14 +1420,103 @@ function renderCustomer(){
   });
 }
 
+/* ===================== SCRIPT TABS ===================== */
+function scriptTabList(){ return DB.settings.scriptTabs||[]; }
+function scriptTabAktif(){ return DB.settings.scriptTabAktif||''; }
+
+function renderScriptTabs(){
+  const tabs=scriptTabList();
+  const aktif=scriptTabAktif();
+  const bar=$('#script-tabs');
+  if(!tabs.length){ bar.innerHTML=''; return; }
+
+  const hitungAll=DB.script.length;
+  const hitungTab=g=>DB.script.filter(s=>String(s.grup||'')===(g||'')).length;
+  const tanpaTab=DB.script.filter(s=>!s.grup||!tabs.includes(s.grup)).length;
+
+  let h='<button class="stab'+(aktif===''?' on':'')+'" data-g="">Semua<span class="stab-n">'+hitungAll+'</span></button>';
+  tabs.forEach(g=>{
+    const n=hitungTab(g);
+    h+='<button class="stab'+(aktif===g?' on':'')+'" data-g="'+esc(g)+'">'+esc(g)+'<span class="stab-n">'+n+'</span></button>';
+  });
+  if(tanpaTab && tabs.length)
+    h+='<button class="stab'+(aktif==='__tanpa__'?' on':'')+'" data-g="__tanpa__">Tanpa tab<span class="stab-n">'+tanpaTab+'</span></button>';
+  h+='<button class="stab stab-add" title="Tambah tab baru">+</button>';
+  bar.innerHTML=h;
+
+  bar.querySelectorAll('.stab:not(.stab-add)').forEach(b=>{
+    b.onclick=()=>{
+      DB.settings.scriptTabAktif=b.dataset.g;
+      tulis(DB); renderScriptTabs(); renderScript();
+    };
+    b.oncontextmenu=e=>{
+      if(b.dataset.g===''||b.dataset.g==='__tanpa__') return;
+      e.preventDefault(); bukaTabCtx(e,b.dataset.g);
+    };
+  });
+  bar.querySelector('.stab-add').onclick=tambahScriptTab;
+}
+function tambahScriptTab(){
+  const nama=prompt('Nama tab baru:');
+  if(!nama||!nama.trim()) return;
+  const n=nama.trim();
+  if((DB.settings.scriptTabs||[]).includes(n)){ toast('Tab "'+n+'" sudah ada.'); return; }
+  DB.settings.scriptTabs=DB.settings.scriptTabs||[];
+  DB.settings.scriptTabs.push(n);
+  DB.settings.scriptTabAktif=n;
+  tulis(DB); renderScriptTabs(); renderScript();
+  toast('Tab "'+n+'" ditambahkan.');
+}
+function bukaTabCtx(e,nama){
+  const ctx=$('#stab-ctx');
+  ctx.innerHTML='<button data-a="rename">Ubah nama</button><button data-a="delete" class="danger">Hapus tab</button>';
+  ctx.hidden=false;
+  const x=Math.min(e.clientX,window.innerWidth-160), y=Math.min(e.clientY,window.innerHeight-80);
+  ctx.style.left=x+'px'; ctx.style.top=y+'px';
+  const tutup=()=>{ ctx.hidden=true; document.removeEventListener('click',tutup); };
+  setTimeout(()=>document.addEventListener('click',tutup),10);
+
+  ctx.querySelector('[data-a=rename]').onclick=()=>{
+    ctx.hidden=true;
+    const baru=prompt('Ubah nama tab "'+nama+'" menjadi:',nama);
+    if(!baru||!baru.trim()||baru.trim()===nama) return;
+    const nb=baru.trim();
+    if(DB.settings.scriptTabs.includes(nb)){ toast('Tab "'+nb+'" sudah ada.'); return; }
+    const idx=DB.settings.scriptTabs.indexOf(nama);
+    if(idx>=0) DB.settings.scriptTabs[idx]=nb;
+    DB.script.forEach(s=>{ if(s.grup===nama){ s.grup=nb; s.diubah=Date.now(); s.perlu=1; }});
+    if(DB.settings.scriptTabAktif===nama) DB.settings.scriptTabAktif=nb;
+    save(true); renderScriptTabs(); renderScript();
+    toast('Tab diubah menjadi "'+nb+'".');
+  };
+  ctx.querySelector('[data-a=delete]').onclick=()=>{
+    ctx.hidden=true;
+    const n=DB.script.filter(s=>s.grup===nama).length;
+    if(!confirm('Hapus tab "'+nama+'"?'+(n?'\n\n'+n+' script di tab ini akan pindah ke "Tanpa tab".':''))) return;
+    DB.settings.scriptTabs=DB.settings.scriptTabs.filter(g=>g!==nama);
+    DB.script.forEach(s=>{ if(s.grup===nama){ s.grup=''; s.diubah=Date.now(); s.perlu=1; }});
+    if(DB.settings.scriptTabAktif===nama) DB.settings.scriptTabAktif='';
+    save(true); renderScriptTabs(); renderScript();
+    toast('Tab "'+nama+'" dihapus.');
+  };
+}
+
 function renderScript(){
-  const hit=k=>DB.script.filter(s=>(s.status||'belum')===k).length;
+  renderScriptTabs();
+  const aktifTab=scriptTabAktif();
+  const tabs=scriptTabList();
+  // Filter by tab first
+  const tabFiltered=aktifTab===''?DB.script
+    :aktifTab==='__tanpa__'?DB.script.filter(s=>!s.grup||!tabs.includes(s.grup))
+    :DB.script.filter(s=>String(s.grup||'')===aktifTab);
+
+  const hit=k=>tabFiltered.filter(s=>(s.status||'belum')===k).length;
   $('#script-stats').innerHTML=Object.keys(STATUS).map(k=>
     '<div class="stat"><div class="v">'+hit(k)+'</div><div class="k">'+STATUS[k].label+'</div></div>').join('');
   chipBar($('#script-chips'),[{v:'',t:'Semua'}].concat(Object.keys(STATUS).map(k=>({v:k,t:STATUS[k].label}))),filter.script,
     v=>{ filter.script=(filter.script===v?'':v); renderScript(); });
   const q=cari.toLowerCase();
-  let data=DB.script.filter(s=>(!filter.script||(s.status||'belum')===filter.script)&&cocok(s,q));
+  let data=tabFiltered.filter(s=>(!filter.script||(s.status||'belum')===filter.script)&&cocok(s,q));
   data=data.slice().sort(modeUrut==='nomor'?bandingNomor:modeUrut==='seri'?bandingScript:(a,b)=>(b.diubah||0)-(a.diubah||0));
   const list=$('#script-list');
   $('#n-script').textContent=DB.script.length;
@@ -1421,7 +1538,7 @@ function renderScript(){
     const no=nomorScript(s);
     return kepala+'<article class="card'+(dipilih.has(s.id)?' dipilih':'')+'" data-id="'+s.id+'">'+
     '<div class="row">'+kotakPilih(s.id)+'<h3>'+esc(s.judul)+'</h3><span class="spacer"></span><span class="status '+st.cls+'">'+st.label+'</span></div>'+
-    '<div class="row" style="margin-top:7px"><span class="meta">'+(no!==null?'#'+no+' · ':'')+esc(s.seri||'Tanpa seri')+' · '+tglID(s.tanggal)+'</span>'+
+    '<div class="row" style="margin-top:7px"><span class="meta">'+(no!==null?'#'+no+' · ':'')+esc(s.seri||'Tanpa seri')+' · '+tglID(s.tanggal)+(s.grup?' · <span style="color:var(--violet)">'+esc(s.grup)+'</span>':'')+'</span>'+
     String(s.tag||'').split(',').filter(x=>x.trim()).map(x=>'<span class="tag">'+esc(x.trim())+'</span>').join('')+'</div>'+
     (s.hook?'<div class="body-text open" style="font-family:var(--display);font-size:16px;color:var(--text);margin-top:12px">'+esc(s.hook)+'</div>':'')+
     '<div class="body-text">'+esc(s.isi||'')+'<div class="fade"></div></div>'+
@@ -1820,7 +1937,7 @@ function pisahHook(mentah){
   const blok=String(mentah).split(/\n[ \t]*\n/);
   return { hook:(blok[0]||'').trim(), isi:blok.slice(1).join('\n\n').trim() };
 }
-function rakitScript(it,seri,pisah,status){
+function rakitScript(it,seri,pisah,status,grup){
   const mentah=rapikanNaskah(it.mentah);
   const bagi=pisah?pisahHook(mentah):{hook:'',isi:mentah};
   return {
@@ -1832,6 +1949,7 @@ function rakitScript(it,seri,pisah,status){
     hook:bagi.hook,
     isi:bagi.isi,
     tag:it.hari?'Hari '+it.hari:'',
+    grup:grup||'',
     tanggal:today(),
     diubah:Date.now(),
     perlu:1
@@ -1893,7 +2011,7 @@ function segarkanImpor(){
       const kunci=seri+'#'+it.nomor;
       const dobel=lewati&&(dipakai.has(kunci)||DB.script.some(x=>Number(x.nomor)===it.nomor&&String(x.seri||'')===seri));
       if(!dobel){ baru++; dipakai.add(kunci); }
-      const sc=rakitScript(it,seri,pisah,'belum');
+      const sc=rakitScript(it,seri,pisah,'belum','');
       const cuplik=(sc.hook||sc.isi).split('\n').slice(0,2).join(' / ');
       return '<div style="margin-bottom:8px'+(dobel?';opacity:.35':'')+'">'
         +'<span style="color:var(--brass)">'+String(it.nomor).padStart(2,'0')+'</span> '
@@ -1911,6 +2029,9 @@ function segarkanImpor(){
 
 $('#impor-md').onclick=()=>{
   $('#imp-status').innerHTML=Object.keys(STATUS).map(k=>'<option value="'+k+'">'+STATUS[k].label+'</option>').join('');
+  const tabs=DB.settings.scriptTabs||[];
+  const aktif=scriptTabAktif();
+  $('#imp-tab').innerHTML='<option value="">(Tanpa tab)</option>'+tabs.map(g=>'<option value="'+esc(g)+'"'+(g===aktif&&aktif!==''&&aktif!=='__tanpa__'?' selected':'')+'>'+esc(g)+'</option>').join('');
   $('#scrim-impor').classList.add('on');
   segarkanImpor();
 };
@@ -1936,6 +2057,7 @@ $('#imp-jalan').onclick=()=>{
   const paksa=$('#imp-seri').value.trim();
   const pisah=$('#imp-pisah').checked, lewati=$('#imp-lewati').checked;
   const status=$('#imp-status').value||'belum';
+  const grup=$('#imp-tab').value||'';
   const dipakai=new Set();
   let masuk=0,lewat=0;
   imporSumber.forEach(s=>{
@@ -1944,7 +2066,7 @@ $('#imp-jalan').onclick=()=>{
       const kunci=seri+'#'+it.nomor;
       if(lewati&&(dipakai.has(kunci)||DB.script.some(x=>Number(x.nomor)===it.nomor&&String(x.seri||'')===seri))){ lewat++; return; }
       dipakai.add(kunci);
-      DB.script.push(rakitScript(it,seri,pisah,status)); masuk++;
+      DB.script.push(rakitScript(it,seri,pisah,status,grup)); masuk++;
     });
   });
   if(!masuk){ toast(lewat?'Semua nomor itu sudah ada.':'Tidak ada yang bisa diimpor.'); return; }
