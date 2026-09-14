@@ -261,6 +261,7 @@ details.help .in{padding:0 15px 15px}
       <label class="sw" id="pilih-drive-w" style="margin:0"><input type="checkbox" id="pilih-drive">Hapus juga di Drive</label>
       <button class="btn sm" id="pilih-ocr">OCR terpilih</button>
         <button class="btn sm" id="pilih-rapi">Rapikan terpilih</button>
+      <button class="btn sm" id="pilih-ekspor">Ekspor terpilih</button>
       <button class="btn sm danger" id="pilih-hapus">Hapus</button>
       <button class="btn sm ghost" id="pilih-batal">Selesai</button>
     </div>
@@ -437,16 +438,16 @@ details.help .in{padding:0 15px 15px}
 
 <div class="scrim" id="scrim-impor"><div class="sheet" style="max-width:860px">
   <h2>Impor script dari Markdown</h2>
-  <p class="lede" style="margin-bottom:18px">Pilih beberapa file .md sekaligus, atau tempel isinya. Nomor, judul, hari, dan hook diisi otomatis dari judul bagian dan paragraf pertama tiap script.</p>
+  <p class="lede" style="margin-bottom:18px">Menerima <b>.md</b>, <b>.tsv</b>, dan <b>.json</b> hasil ekspor — bentuknya dikenali sendiri. Bisa beberapa file sekaligus, atau tempel isinya. Untuk Markdown, nomor, judul, hari, dan hook diisi otomatis dari judul bagian dan paragraf pertama tiap script.</p>
   <div class="fmt-grid">
     <div>
       <div class="row" style="margin-bottom:12px">
-        <button class="btn sm" id="imp-pilih">Pilih file .md</button>
+        <button class="btn sm" id="imp-pilih">Pilih file</button>
         <button class="btn sm ghost" id="imp-kosongkan">Kosongkan semua</button>
       </div>
       <div id="imp-berkas" style="margin-bottom:12px"></div>
       <label><span class="l">Atau tempel langsung</span>
-        <textarea id="imp-teks" rows="7" placeholder="Tempel isi Markdown di sini…"></textarea></label>
+        <textarea id="imp-teks" rows="7" placeholder="Tempel isi Markdown, TSV, atau JSON di sini…"></textarea></label>
       <div class="grid2">
         <label><span class="l">Seri</span><input type="text" id="imp-seri" placeholder="ikut tiap file"></label>
         <label><span class="l">Status awal</span><select id="imp-status"></select></label>
@@ -466,6 +467,40 @@ details.help .in{padding:0 15px 15px}
     <button class="btn primary" id="imp-jalan">Impor</button>
     <span class="spacer"></span>
     <button class="btn ghost" data-close="scrim-impor">Tutup</button>
+  </div></div></div>
+
+<div class="scrim" id="scrim-ekspor"><div class="sheet" style="max-width:860px">
+  <h2>Ekspor script terpilih</h2>
+  <p class="lede" style="margin-bottom:18px" id="eks-jumlah">—</p>
+  <div class="fmt-grid">
+    <div>
+      <label><span class="l">Bentuk berkas</span>
+        <select id="eks-bentuk">
+          <option value="md">Markdown — bisa diimpor balik ke Meja Kerja</option>
+          <option value="teks">Teks polos — siap tempel ke mana saja</option>
+          <option value="tsv">TSV — satu script satu baris, buat Google Sheet</option>
+          <option value="json">JSON — cadangan mentah, semua kolom ikut</option>
+        </select></label>
+      <label><span class="l">Urutan</span>
+        <select id="eks-urut">
+          <option value="nomor">Nomor</option>
+          <option value="seri">Seri lalu nomor</option>
+          <option value="pilih">Sesuai urutan yang tampil</option>
+        </select></label>
+      <label class="opt"><input type="checkbox" id="eks-hook" checked>Sertakan hook</label>
+      <label class="opt"><input type="checkbox" id="eks-meta" checked>Sertakan nomor, seri, tab, dan status</label>
+      <label class="opt"><input type="checkbox" id="eks-rapi">Susun ulang barisnya dulu pakai setelan Rapikan</label>
+      <div class="hint">Bentuk Markdown memakai pola <span style="font-family:var(--mono)">## SCRIPT &lt;nomor&gt;</span> yang sama dengan panel Impor, jadi hasilnya bisa kamu masukkan lagi ke tab lain kapan saja.</div>
+      <label><span class="l">Nama berkas</span><input type="text" id="eks-nama" placeholder="script"></label>
+    </div>
+    <div><span class="l" style="font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:5px">Pratinjau</span>
+      <div class="preview" id="eks-pratinjau" style="max-height:420px">—</div></div>
+  </div>
+  <div class="sheet-actions" style="margin-top:18px">
+    <button class="btn primary" id="eks-unduh">Unduh berkas</button>
+    <button class="btn" id="eks-salin">Salin ke papan klip</button>
+    <span class="spacer"></span>
+    <button class="btn ghost" data-close="scrim-ekspor">Tutup</button>
   </div></div></div>
 
 <div class="scrim" id="scrim-ocr"><div class="sheet" style="max-width:720px">
@@ -532,7 +567,7 @@ details.help .in{padding:0 15px 15px}
 <div class="toast" id="toast"></div>
 <input type="file" id="file-import" accept="application/json" hidden>
 <input type="file" id="file-images" accept="image/*,video/*" multiple hidden>
-<input type="file" id="file-md" accept=".md,.markdown,.txt,text/markdown,text/plain" multiple hidden>
+<input type="file" id="file-md" accept=".md,.markdown,.txt,.tsv,.json,text/markdown,text/plain,text/tab-separated-values,application/json" multiple hidden>
 
 <script>
 /* ===================== DASAR ===================== */
@@ -1841,6 +1876,7 @@ function setPilih(on){
   $('#pilih-drive-w').style.display=(tab==='testi')?'':'none';
   $('#pilih-ocr').style.display=(tab==='testi')?'':'none';
   $('#pilih-rapi').style.display=(tab==='script')?'':'none';
+  $('#pilih-ekspor').style.display=(tab==='script')?'':'none';
   segarkanPilih(); render();
 }
 function segarkanPilih(){
@@ -1934,6 +1970,12 @@ function uraikanMD(teks){
       return;
     }
     if(/^#{1,6}\s/.test(l)){ tutup(); return; }
+    if(/^\s*<!--[\s\S]*-->\s*$/.test(l)){
+      // penanda dari ekspor: "<!-- Tab: X · Status: Sudah dibuat -->"
+      const ms=l.match(/Status:\s*([^·\-]+?)\s*(?:·|-->)/i);
+      if(ms&&cur) cur.status=labelKeStatus(ms[1]);
+      return;
+    }
     if(cur){ if(/^-{3,}\s*$/.test(l)){ tutup(); return; } cur.buf.push(l); }
   });
   tutup();
@@ -1944,6 +1986,24 @@ function pisahHook(mentah){
   return { hook:(blok[0]||'').trim(), isi:blok.slice(1).join('\n\n').trim() };
 }
 function rakitScript(it,seri,pisah,status,grup){
+  // Sumber TSV/JSON sudah membawa semua kolom — pakai apa adanya.
+  if(it.rec){
+    const r=it.rec;
+    return {
+      id:uid(),
+      nomor:(r.nomor!=null&&r.nomor!=='')?angkaDari(r.nomor):it.nomor,
+      judul:r.judul||('Script '+(it.nomor||'')),
+      seri:seri||r.seri||'',
+      status:r.status||status||'belum',
+      hook:r.hook||'',
+      isi:r.isi||'',
+      tag:r.tag||'',
+      grup:grup||'',
+      tanggal:r.tanggal||today(),
+      diubah:Date.now(),
+      perlu:1
+    };
+  }
   const mentah=rapikanNaskah(it.mentah);
   const bagi=pisah?pisahHook(mentah):{hook:'',isi:mentah};
   return {
@@ -1951,7 +2011,7 @@ function rakitScript(it,seri,pisah,status,grup){
     nomor:it.nomor,
     judul:'Script '+it.nomor+(it.judul?' — '+it.judul:''),
     seri:seri||'',
-    status:status||'belum',
+    status:it.status||status||'belum',
     hook:bagi.hook,
     isi:bagi.isi,
     tag:it.hari?'Hari '+it.hari:'',
@@ -1973,6 +2033,59 @@ function sudahAdaNomor(nomor,seri,grup){
     && String(x.grup||'')===g);
 }
 
+/* Bentuk TSV dan JSON hasil ekspor membawa semua kolom, bukan cuma
+   naskah mentah. Item dari sumber seperti itu menyimpan record utuh di
+   .rec, dan rakitScript memakainya apa adanya. */
+const labelKeStatus=lab=>{
+  const k=Object.keys(STATUS).find(k=>STATUS[k].label===String(lab||'').trim());
+  return k||'';
+};
+function uraikanJSON(teks){
+  let j; try{ j=JSON.parse(teks); }catch(e){ return null; }
+  const arr=Array.isArray(j)?j:(Array.isArray(j.script)?j.script:null);
+  if(!arr) return null;
+  const item=arr.filter(r=>r&&(r.isi||r.hook||r.judul)).map(r=>({
+    nomor:angkaDari(r.nomor),
+    hari:hariDariTag(r),
+    judul:judulPolos(r),
+    mentah:'',
+    rec:r
+  }));
+  return item.length?{seri:'',item:item}:null;
+}
+function uraikanTSV(teks){
+  const baris=String(teks||'').replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n').split('\n').filter(l=>l.length);
+  if(baris.length<2) return null;
+  const kepala=baris[0].split('\t').map(h=>h.trim().toLowerCase());
+  if(kepala.indexOf('judul')<0) return null;
+  const at=n=>kepala.indexOf(n);
+  const balik=v=>String(v==null?'':v).replace(/\s*⏎\s*/g,'\n').trim();
+  const item=[];
+  for(let i=1;i<baris.length;i++){
+    const sel=baris[i].split('\t');
+    const ambil=n=>{ const k=at(n); return k<0?'':balik(sel[k]); };
+    const judul=ambil('judul');
+    const isi=ambil('isi'), hook=ambil('hook');
+    if(!judul&&!isi&&!hook) continue;
+    const nomor=angkaDari(ambil('nomor'));
+    const rec={
+      nomor:nomor, judul:judul, seri:ambil('seri'), grup:ambil('tab'),
+      status:labelKeStatus(ambil('status'))||'belum',
+      tag:ambil('tag'), tanggal:ambil('tanggal'), hook:hook, isi:isi
+    };
+    item.push({nomor:nomor,hari:hariDariTag(rec),judul:judul,mentah:'',rec:rec});
+  }
+  return item.length?{seri:'',item:item}:null;
+}
+/* Pilih pembaca yang cocok dengan isi berkasnya. Markdown tetap jadi
+   jalur terakhir supaya perilaku lama tidak berubah. */
+function uraikanSumber(teks){
+  const t=String(teks||'').trim();
+  if(t.charAt(0)==='['||t.charAt(0)==='{'){ const j=uraikanJSON(t); if(j) return j; }
+  if(t.indexOf('\t')>=0){ const v=uraikanTSV(t); if(v) return v; }
+  return uraikanMD(teks);
+}
+
 let imporSumber=[];   // {id,nama,seri,item[]}
 
 function bacaBerkas(f){
@@ -1986,7 +2099,7 @@ function bacaBerkas(f){
 function pasangSumber(id,nama,teks){
   imporSumber=imporSumber.filter(s=>s.id!==id);
   if(!String(teks).trim()) return;
-  const h=uraikanMD(teks);
+  const h=uraikanSumber(teks);
   imporSumber.push({id:id,nama:nama,seri:h.seri,item:h.item});
 }
 function segarkanBerkas(){
@@ -2015,7 +2128,7 @@ function segarkanImpor(){
 
   if(!total){
     kotak.textContent=imporSumber.length||$('#imp-teks').value.trim()
-      ? 'Tidak menemukan pola "## SCRIPT <nomor>". Cek lagi format filenya.'
+      ? 'Tidak terbaca. Untuk Markdown perlu pola "## SCRIPT <nomor>"; TSV perlu baris kepala yang memuat kolom Judul.'
       : 'Belum ada file atau tempelan.';
     $('#imp-jalan').textContent='Impor';
     return;
@@ -2026,10 +2139,11 @@ function segarkanImpor(){
   imporSumber.forEach(s=>{
     const seri=paksa||s.seri||'';
     const isi=s.item.map(it=>{
-      const kunci=grup+'||'+seri+'#'+it.nomor;
-      const dobel=lewati&&(dipakai.has(kunci)||sudahAdaNomor(it.nomor,seri,grup));
+      const seriIt=paksa||(it.rec&&it.rec.seri)||s.seri||'';
+      const kunci=grup+'||'+seriIt+'#'+it.nomor;
+      const dobel=lewati&&(dipakai.has(kunci)||sudahAdaNomor(it.nomor,seriIt,grup));
       if(!dobel){ baru++; dipakai.add(kunci); }
-      const sc=rakitScript(it,seri,pisah,'belum',grup);
+      const sc=rakitScript(it,seriIt,pisah,'belum',grup);
       const cuplik=(sc.hook||sc.isi).split('\n').slice(0,2).join(' / ');
       return '<div style="margin-bottom:8px'+(dobel?';opacity:.35':'')+'">'
         +'<span style="color:var(--brass)">'+String(it.nomor).padStart(2,'0')+'</span> '
@@ -2082,10 +2196,11 @@ $('#imp-jalan').onclick=()=>{
   imporSumber.forEach(s=>{
     const seri=paksa||s.seri||'';
     s.item.forEach(it=>{
-      const kunci=grup+'||'+seri+'#'+it.nomor;
-      if(lewati&&(dipakai.has(kunci)||sudahAdaNomor(it.nomor,seri,grup))){ lewat++; return; }
+      const seriIt=paksa||(it.rec&&it.rec.seri)||s.seri||'';
+      const kunci=grup+'||'+seriIt+'#'+it.nomor;
+      if(lewati&&(dipakai.has(kunci)||sudahAdaNomor(it.nomor,seriIt,grup))){ lewat++; return; }
       dipakai.add(kunci);
-      DB.script.push(rakitScript(it,seri,pisah,status,grup)); masuk++;
+      DB.script.push(rakitScript(it,seriIt,pisah,status,grup)); masuk++;
     });
   });
   if(!masuk){ toast(lewat?'Semua nomor itu sudah ada.':'Tidak ada yang bisa diimpor.'); return; }
@@ -2094,6 +2209,128 @@ $('#imp-jalan').onclick=()=>{
   imporSumber=[]; $('#imp-teks').value='';
   toast(masuk+' script masuk'+(lewat?', '+lewat+' dilewati karena sudah ada.':'.'));
 };
+
+/* ===================== EKSPOR SCRIPT TERPILIH ===================== */
+let eksDaftar=[];
+
+/* Judul tersimpan sebagai "Script 49 — Hening yang bekerja".
+   Untuk header Markdown kita cuma butuh bagian sesudah tanda pisahnya,
+   supaya tidak jadi "SCRIPT 49 — Script 49 — …" waktu diimpor balik. */
+function judulPolos(s){
+  const j=String(s.judul||'').trim();
+  const m=j.match(/^Script\s*#?\s*\d+\s*[—–:-]\s*([\s\S]+)$/i);
+  return m?m[1].trim():j;
+}
+function hariDariTag(s){
+  const m=String(s.tag||'').match(/Hari\s+([0-9\u2013\u2014-]+)/i);
+  return m?m[1]:'';
+}
+function teksScript(s,opsi){
+  let t=(opsi.hook&&s.hook?s.hook+'\n\n':'')+(s.isi||'');
+  if(!opsi.hook&&!s.isi&&s.hook) t=s.hook;
+  return opsi.rapi?rapikan(t,setelanRapi()):t.trim();
+}
+function eksporMD(daftar,opsi){
+  const bagian=[];
+  let seriTerakhir=null;
+  daftar.forEach(s=>{
+    const seri=String(s.seri||'').trim();
+    if(opsi.meta&&seri&&seri!==seriTerakhir){ bagian.push('# '+seri); seriTerakhir=seri; }
+    const no=nomorScript(s), hari=hariDariTag(s), jud=judulPolos(s);
+    let kepala='## SCRIPT '+(no!==null?no:'');
+    if(hari) kepala+=' — Hari '+hari+(jud?' ('+jud+')':'');
+    else if(jud) kepala+=' — '+jud;
+    bagian.push(kepala.trim());
+    if(opsi.meta){
+      const tanda=[];
+      if(s.grup) tanda.push('Tab: '+s.grup);
+      if(s.status&&STATUS[s.status]) tanda.push('Status: '+STATUS[s.status].label);
+      if(tanda.length) bagian.push('<!-- '+tanda.join(' · ')+' -->');
+    }
+    bagian.push(teksScript(s,opsi));
+    bagian.push('---');
+  });
+  return bagian.join('\n\n').replace(/\n{4,}/g,'\n\n\n').trim()+'\n';
+}
+function eksporTeks(daftar,opsi){
+  return daftar.map(s=>{
+    const no=nomorScript(s);
+    const kepala=opsi.meta
+      ? (no!==null?'['+no+'] ':'')+judulPolos(s)+(s.seri?' · '+s.seri:'')+(s.grup?' · '+s.grup:'')
+      : judulPolos(s);
+    return kepala+'\n\n'+teksScript(s,opsi);
+  }).join('\n\n\n════════════════\n\n\n').trim()+'\n';
+}
+function eksporTSV(daftar,opsi){
+  const rapi=v=>String(v==null?'':v).replace(/\t/g,' ').replace(/\r?\n/g,' ⏎ ');
+  const kepala=['Nomor','Judul','Seri','Tab','Status','Tag','Tanggal','Hook','Isi'];
+  const baris=daftar.map(s=>[
+    nomorScript(s)!==null?nomorScript(s):'',
+    judulPolos(s), s.seri||'', s.grup||'',
+    (STATUS[s.status||'belum']||{}).label||'', s.tag||'', s.tanggal||'',
+    opsi.hook?(s.hook||''):'',
+    opsi.rapi?rapikan(s.isi||'',setelanRapi()):(s.isi||'')
+  ].map(rapi).join('\t'));
+  return [kepala.join('\t')].concat(baris).join('\n');
+}
+function eksporJSON(daftar){
+  return JSON.stringify(daftar.map(bersih),null,2);
+}
+const eksOpsi=()=>({
+  hook:$('#eks-hook').checked,
+  meta:$('#eks-meta').checked,
+  rapi:$('#eks-rapi').checked
+});
+function eksUrutkan(){
+  const mode=$('#eks-urut').value;
+  const d=eksDaftar.slice();
+  if(mode==='nomor') d.sort(bandingNomor);
+  else if(mode==='seri') d.sort(bandingScript);
+  return d;
+}
+function eksHasil(){
+  const bentuk=$('#eks-bentuk').value, opsi=eksOpsi(), d=eksUrutkan();
+  if(bentuk==='md')   return eksporMD(d,opsi);
+  if(bentuk==='teks') return eksporTeks(d,opsi);
+  if(bentuk==='tsv')  return eksporTSV(d,opsi);
+  return eksporJSON(d);
+}
+const eksEkstensi=()=>({md:'.md',teks:'.txt',tsv:'.tsv',json:'.json'}[$('#eks-bentuk').value]||'.txt');
+function renderEkspor(){
+  const bentuk=$('#eks-bentuk').value;
+  // TSV dan JSON punya bentuknya sendiri, pilihan susunan baris tidak berlaku
+  $('#eks-rapi').disabled=(bentuk==='json');
+  $('#eks-meta').disabled=(bentuk==='tsv'||bentuk==='json');
+  const teks=eksHasil();
+  const potong=teks.length>6000?teks.slice(0,6000)+'\n\n… ('+(teks.length-6000)+' karakter lagi)':teks;
+  $('#eks-pratinjau').textContent=potong;
+  $('#eks-unduh').textContent='Unduh '+eksDaftar.length+' script';
+}
+$('#pilih-ekspor').onclick=()=>{
+  if(tab!=='script'){ toast('Ekspor terpilih baru tersedia untuk script.'); return; }
+  if(!dipilih.size){ toast('Centang dulu script yang mau diekspor.'); return; }
+  // Ikuti urutan yang sedang tampil, bukan urutan pencentangan
+  eksDaftar=tampil.script.filter(id=>dipilih.has(id))
+    .map(id=>DB.script.find(x=>x.id===id)).filter(Boolean);
+  if(!eksDaftar.length){ toast('Script terpilih tidak ada di tampilan sekarang.'); return; }
+
+  const tabAktif=scriptTabAktif();
+  const namaTab=(tabAktif&&tabAktif!=='__tanpa__')?tabAktif:'script';
+  $('#eks-nama').value=namaTab.toLowerCase().replace(/\s+/g,'-')+'-'+today();
+  $('#eks-jumlah').textContent=eksDaftar.length+' script siap diekspor'
+    +(tabAktif&&tabAktif!==''&&tabAktif!=='__tanpa__'?' dari tab "'+tabAktif+'"':'')+'.';
+  $('#scrim-ekspor').classList.add('on');
+  renderEkspor();
+};
+['#eks-bentuk','#eks-urut','#eks-hook','#eks-meta','#eks-rapi']
+  .forEach(s=>$(s).addEventListener('change',renderEkspor));
+$('#eks-unduh').onclick=()=>{
+  const nama=($('#eks-nama').value.trim()||'script')+eksEkstensi();
+  const tipe=$('#eks-bentuk').value==='json'?'application/json':'text/plain';
+  unduh(new Blob(['\uFEFF'+eksHasil()],{type:tipe+';charset=utf-8'}),nama);
+  toast(eksDaftar.length+' script terunduh sebagai '+nama);
+};
+$('#eks-salin').onclick=()=>{ salinPolos(eksHasil()); toast(eksDaftar.length+' script tersalin.'); };
 
 /* ===================== EKSPOR ===================== */
 const kolomCust=()=>['Tanggal','Nama','WhatsApp','Produk','Harga','Alasan Beli','Sumber','Fase','Status','Catatan'];
