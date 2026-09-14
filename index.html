@@ -438,7 +438,7 @@ details.help .in{padding:0 15px 15px}
 
 <div class="scrim" id="scrim-impor"><div class="sheet" style="max-width:860px">
   <h2>Impor script dari Markdown</h2>
-  <p class="lede" style="margin-bottom:18px">Menerima <b>.md</b>, <b>.tsv</b>, dan <b>.json</b> — bentuknya dikenali sendiri. Bisa beberapa file sekaligus, atau tempel isinya. Untuk Markdown yang penting cuma nomornya: <span style="font-family:var(--mono)">## SCRIPT 12</span>, <span style="font-family:var(--mono)">## 12 — Judul</span>, <span style="font-family:var(--mono)">**SCRIPT 12**</span>, semuanya terbaca. Satu script dianggap berakhir saat nomor berikutnya muncul, jadi garis <span style="font-family:var(--mono)">---</span> di tengah naskah tidak memotong isinya.</p>
+  <p class="lede" style="margin-bottom:18px">Menerima <b>.md</b>, <b>.tsv</b>, dan <b>.json</b> — bentuknya dikenali sendiri. Bisa beberapa file sekaligus, atau tempel isinya. Bentuk Markdown-nya bebas — pola judulnya dipelajari dari isi filemu sendiri. Satu script dianggap berakhir saat judul script berikutnya muncul, jadi garis <span style="font-family:var(--mono)">---</span> di tengah naskah tidak memotong isinya. Judul yang tidak menyebut nomor tetap masuk dengan nomor lanjutan.</p>
   <div class="fmt-grid">
     <div>
       <div class="row" style="margin-bottom:12px">
@@ -1944,39 +1944,50 @@ $('#pilih-hapus').onclick=async()=>{
 });
 
 /* ===================== IMPOR MARKDOWN ===================== */
-/* Aturannya sengaja longgar: yang menandai script baru HANYA baris
-   bernomor. Satu script berakhir ketika nomor berikutnya muncul —
-   bukan karena garis "---", bukan karena baris kosong. Jadi bentuk .md
-   boleh berubah-ubah, asal nomornya ada.
+/* Parser ini tidak mengunci satu bentuk .md. Ia memindai dokumennya
+   dulu untuk menebak baris mana yang berperan sebagai judul script,
+   baru membacanya. Aturan intinya satu: sebuah script berakhir ketika
+   judul script berikutnya muncul — bukan karena garis "---", bukan
+   karena baris kosong, bukan karena judul bagian.
 
-   Pola judul bernomor yang dikenali:
-     ## SCRIPT 58 — Hook #58      ### Script #12: Judul
-     ## 58 — Judul                ## 58. Judul
-     ## 58                        **SCRIPT 58**   /   SCRIPT 58 — Judul  */
-const POLA_NOMOR=[
-  /^#{1,6}\s*(?:script|naskah)\s*#?\s*(\d+)\s*[—–:.)\-]?\s*(.*)$/i,
-  /^#{1,6}\s*#?(\d+)\s*[—–:.)\-]\s*(.*)$/,
-  /^#{1,6}\s*#?(\d+)\s*$/
-];
+   Bentuk yang terbaca antara lain:
+     ## SCRIPT 58 — Hook #58     ## SCRIPT (Hook #6)
+     ### Script #12: Judul       ## 12 — Judul      ## 12. Judul
+     ## 12                       **SCRIPT 21**      SCRIPT 21 — Judul
+   Judul script yang sama sekali tanpa angka tetap masuk; nomornya
+   diteruskan dari script sebelumnya supaya tidak ada yang hilang. */
+
+const RE_HEADING=/^(#{1,6})\s+(.*)$/;
 const POLA_NOMOR_POLOS=/^\*{0,2}\s*(?:script|naskah)\s*#?\s*(\d+)\s*\*{0,2}\s*[—–:.)\-]?\s*(.*)$/i;
 
-function kepalaNomor(l){
-  const t=String(l).trim();
-  if(!t) return null;
-  if(t.charAt(0)==='#'){
-    for(let i=0;i<POLA_NOMOR.length;i++){
-      const m=t.match(POLA_NOMOR[i]);
-      if(m) return {nomor:Number(m[1]),sisa:(m[2]||'').trim()};
-    }
-    return null;
-  }
-  // Baris tanpa tanda #. Panjangnya dibatasi supaya kalimat biasa di
-  // dalam naskah tidak salah dikira judul.
-  if(t.length>120) return null;
-  const m=t.match(POLA_NOMOR_POLOS);
-  return m?{nomor:Number(m[1]),sisa:(m[2]||'').trim()}:null;
+/* Ambil nomor dari sebuah judul, dari yang paling meyakinkan ke yang
+   paling longgar. "SCRIPT 6 — Hook #7" harus jadi 6, bukan 7.
+
+   Kalau dokumennya ternyata memang menomori scriptnya secara tegas
+   ("SCRIPT 12"), mode ketat dinyalakan: judul yang tidak menyebut
+   nomor script tidak boleh mencomot angka lain yang kebetulan ada di
+   situ — "## SCRIPT (Hook #6)" bukan script nomor 6, dan "(2024)"
+   bukan script nomor 2024. Yang begitu diberi nomor lanjutan. */
+const RE_NOMOR_TEGAS=/\b(?:script|naskah|no|nomor)\s*[.:#]?\s*(\d+)/i;
+function nomorDariKepala(t,ketat){
+  const s=String(t||'');
+  let m=s.match(RE_NOMOR_TEGAS);        if(m) return Number(m[1]);
+  m=s.match(/^\s*#?\s*(\d+)\b/);        if(m) return Number(m[1]);
+  if(ketat) return null;
+  m=s.match(/#\s*(\d+)/);               if(m) return Number(m[1]);
+  m=s.match(/(\d+)/);                   if(m) return Number(m[1]);
+  return null;
 }
-/* Judul bagian yang bukan nomor script — "# BATCH 1", "# Season 4".
+/* Sisa judul setelah penanda dan nomornya dibuang. */
+function judulDariKepala(t,nomor){
+  let s=String(t||'').replace(/\*\*/g,'').replace(/__/g,'').trim();
+  s=s.replace(/^(?:script|naskah)\b\s*[.:#]?\s*/i,'');
+  if(nomor!==null) s=s.replace(new RegExp('^#?\\s*'+nomor+'\\b\\s*'),'');
+  s=s.replace(/^[—–:.)\-]+\s*/,'').trim();
+  s=s.replace(/^\(([\s\S]*)\)$/,'$1').trim();
+  return s;
+}
+/* Judul bagian yang bukan script — "# BATCH 1", "# Season 4".
    Dipakai sebagai seri untuk script-script di bawahnya. */
 function labelSeri(l){
   const m=String(l).match(/\b(season|batch|bulan|seri|part|bagian)\s*#?\s*(\d+)/i);
@@ -1984,15 +1995,52 @@ function labelSeri(l){
   const kata=m[1].toLowerCase();
   return kata.charAt(0).toUpperCase()+kata.slice(1)+' '+m[2];
 }
-/* Buang hiasan markdown tanpa menyentuh kata-katanya. */
 function bersihkanBaris(l){
   return String(l).replace(/\*\*/g,'').replace(/__/g,'').replace(/^>\s?/,'').replace(/[ \t]+$/,'');
 }
 const garisHias=l=>/^\s*([-*_])(\s*\1){2,}\s*$/.test(l);
 
+/* Tebak tingkat heading mana yang dipakai sebagai judul script.
+   Yang menang adalah tingkat dengan judul berangka terbanyak; kalau
+   seri, yang lebih dalam. Tingkat lain otomatis jadi judul bagian. */
+function tingkatJudulScript(baris){
+  const angka={}, jumlah={};
+  baris.forEach(l=>{
+    const h=String(l).match(RE_HEADING);
+    if(!h) return;
+    const t=h[1].length;
+    jumlah[t]=(jumlah[t]||0)+1;
+    if(/\d/.test(h[2])) angka[t]=(angka[t]||0)+1;
+  });
+  let menang=null;
+  Object.keys(angka).forEach(t=>{
+    t=Number(t);
+    if(menang===null||angka[t]>angka[menang]||(angka[t]===angka[menang]&&t>menang)) menang=t;
+  });
+  if(menang!==null) return menang;
+  // Tidak ada heading berangka sama sekali: pakai tingkat terdalam yang ada.
+  const ada=Object.keys(jumlah).map(Number);
+  return ada.length?Math.max.apply(null,ada):null;
+}
+
+/* Apakah dokumen ini menomori scriptnya secara tegas? Ya, kalau
+   sebagian besar judul scriptnya memuat "SCRIPT <angka>". */
+function modeNomorKetat(baris,tingkat){
+  let total=0,tegas=0;
+  baris.forEach(l=>{
+    const h=String(l).match(RE_HEADING);
+    if(!h||h[1].length!==tingkat) return;
+    total++;
+    if(RE_NOMOR_TEGAS.test(h[2])) tegas++;
+  });
+  return total>0 && tegas>=Math.ceil(total/2);
+}
+
 function uraikanMD(teks){
   const baris=String(teks||'').replace(/\r\n?/g,'\n').split('\n');
-  let seriUmum='', seriKini='';
+  const tingkat=tingkatJudulScript(baris);
+  const ketat=modeNomorKetat(baris,tingkat);
+  let seriUmum='', seriKini='', nomorTerakhir=0;
   const item=[]; let cur=null;
 
   const tutup=()=>{
@@ -2002,25 +2050,34 @@ function uraikanMD(teks){
     if(cur.mentah) item.push(cur);
     cur=null;
   };
+  const mulai=(teksJudul)=>{
+    tutup();
+    let no=nomorDariKepala(teksJudul,ketat);
+    if(no===null) no=nomorTerakhir+1;      // judul tanpa angka tetap diselamatkan
+    nomorTerakhir=no;
+    let sisa=judulDariKepala(teksJudul,no), hari='', judul=sisa;
+    const mh=sisa.match(/^Hari\s+([0-9\u2013\u2014-]+)\s*(.*)$/i);
+    if(mh){ hari=mh[1].replace(/[\u2013\u2014]/g,'-'); judul=(mh[2]||'').trim(); }
+    judul=judul.replace(/^\(([\s\S]*)\)$/,'$1').trim();
+    cur={nomor:no,hari:hari,judul:judul,seri:seriKini,buf:[]};
+  };
 
   baris.forEach(l=>{
-    const k=kepalaNomor(l);
-    if(k){
-      tutup();
-      let sisa=bersihkanBaris(k.sisa).trim(), hari='', judul=sisa;
-      const mh=sisa.match(/^Hari\s+([0-9\u2013\u2014-]+)\s*(.*)$/i);
-      if(mh){ hari=mh[1].replace(/[\u2013\u2014]/g,'-'); judul=(mh[2]||'').trim(); }
-      judul=judul.replace(/^\(([\s\S]*)\)$/,'$1').trim();
-      cur={nomor:k.nomor,hari:hari,judul:judul,seri:seriKini,buf:[]};
+    const h=String(l).match(RE_HEADING);
+    if(h){
+      if(h[1].length===tingkat) mulai(h[2]);
+      else {
+        tutup();
+        const s=labelSeri(h[2]);
+        if(s){ seriKini=s; if(!seriUmum) seriUmum=s; }
+      }
       return;
     }
-    // Judul bagian yang bukan script: tutup blok, catat serinya.
-    if(/^#{1,6}\s/.test(l)){
-      tutup();
-      const s=labelSeri(l);
-      if(s){ seriKini=s; if(!seriUmum) seriUmum=s; }
-      return;
-    }
+    // Baris biasa yang berperan sebagai judul: "**SCRIPT 21**".
+    // Dibatasi panjangnya supaya kalimat naskah tidak salah dikira judul.
+    const t=String(l).trim();
+    if(t && t.length<=120 && POLA_NOMOR_POLOS.test(t)){ mulai(t); return; }
+
     // Penanda "<!-- Status: … -->" dari ekspor Meja Kerja.
     if(/^\s*<!--[\s\S]*-->\s*$/.test(l)){
       const ms=l.match(/Status:\s*([^·\-]+?)\s*(?:·|-->)/i);
@@ -2028,7 +2085,7 @@ function uraikanMD(teks){
       return;
     }
     if(!cur) return;
-    if(garisHias(l)) return;              // "---" cuma hiasan, bukan akhir script
+    if(garisHias(l)) return;               // "---" cuma hiasan, bukan akhir script
     cur.buf.push(bersihkanBaris(l));
   });
   tutup();
@@ -2181,7 +2238,7 @@ function segarkanImpor(){
 
   if(!total){
     kotak.textContent=imporSumber.length||$('#imp-teks').value.trim()
-      ? 'Tidak menemukan satu pun nomor script. Pastikan tiap script diawali baris bernomor seperti "## SCRIPT 12" atau "## 12 — Judul". Untuk TSV, baris kepalanya harus memuat kolom Judul.'
+      ? 'Tidak menemukan satu pun judul script. Pastikan tiap script diawali baris judul tersendiri, misalnya "## SCRIPT 12" atau "## 12 — Judul". Untuk TSV, baris kepalanya harus memuat kolom Judul.'
       : 'Belum ada file atau tempelan.';
     $('#imp-jalan').textContent='Impor';
     return;
