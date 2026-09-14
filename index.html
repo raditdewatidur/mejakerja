@@ -438,7 +438,7 @@ details.help .in{padding:0 15px 15px}
 
 <div class="scrim" id="scrim-impor"><div class="sheet" style="max-width:860px">
   <h2>Impor script dari Markdown</h2>
-  <p class="lede" style="margin-bottom:18px">Menerima <b>.md</b>, <b>.tsv</b>, dan <b>.json</b> hasil ekspor — bentuknya dikenali sendiri. Bisa beberapa file sekaligus, atau tempel isinya. Untuk Markdown, nomor, judul, hari, dan hook diisi otomatis dari judul bagian dan paragraf pertama tiap script.</p>
+  <p class="lede" style="margin-bottom:18px">Menerima <b>.md</b>, <b>.tsv</b>, dan <b>.json</b> — bentuknya dikenali sendiri. Bisa beberapa file sekaligus, atau tempel isinya. Untuk Markdown yang penting cuma nomornya: <span style="font-family:var(--mono)">## SCRIPT 12</span>, <span style="font-family:var(--mono)">## 12 — Judul</span>, <span style="font-family:var(--mono)">**SCRIPT 12**</span>, semuanya terbaca. Satu script dianggap berakhir saat nomor berikutnya muncul, jadi garis <span style="font-family:var(--mono)">---</span> di tengah naskah tidak memotong isinya.</p>
   <div class="fmt-grid">
     <div>
       <div class="row" style="margin-bottom:12px">
@@ -1944,42 +1944,95 @@ $('#pilih-hapus').onclick=async()=>{
 });
 
 /* ===================== IMPOR MARKDOWN ===================== */
-/* Mengenali pola:  ## SCRIPT 49 — Hari 107 (jadi tempat orang pulang)
-   Judul bagian lain (CATATAN PRODUKSI dan sejenisnya) diabaikan. */
+/* Aturannya sengaja longgar: yang menandai script baru HANYA baris
+   bernomor. Satu script berakhir ketika nomor berikutnya muncul —
+   bukan karena garis "---", bukan karena baris kosong. Jadi bentuk .md
+   boleh berubah-ubah, asal nomornya ada.
+
+   Pola judul bernomor yang dikenali:
+     ## SCRIPT 58 — Hook #58      ### Script #12: Judul
+     ## 58 — Judul                ## 58. Judul
+     ## 58                        **SCRIPT 58**   /   SCRIPT 58 — Judul  */
+const POLA_NOMOR=[
+  /^#{1,6}\s*(?:script|naskah)\s*#?\s*(\d+)\s*[—–:.)\-]?\s*(.*)$/i,
+  /^#{1,6}\s*#?(\d+)\s*[—–:.)\-]\s*(.*)$/,
+  /^#{1,6}\s*#?(\d+)\s*$/
+];
+const POLA_NOMOR_POLOS=/^\*{0,2}\s*(?:script|naskah)\s*#?\s*(\d+)\s*\*{0,2}\s*[—–:.)\-]?\s*(.*)$/i;
+
+function kepalaNomor(l){
+  const t=String(l).trim();
+  if(!t) return null;
+  if(t.charAt(0)==='#'){
+    for(let i=0;i<POLA_NOMOR.length;i++){
+      const m=t.match(POLA_NOMOR[i]);
+      if(m) return {nomor:Number(m[1]),sisa:(m[2]||'').trim()};
+    }
+    return null;
+  }
+  // Baris tanpa tanda #. Panjangnya dibatasi supaya kalimat biasa di
+  // dalam naskah tidak salah dikira judul.
+  if(t.length>120) return null;
+  const m=t.match(POLA_NOMOR_POLOS);
+  return m?{nomor:Number(m[1]),sisa:(m[2]||'').trim()}:null;
+}
+/* Judul bagian yang bukan nomor script — "# BATCH 1", "# Season 4".
+   Dipakai sebagai seri untuk script-script di bawahnya. */
+function labelSeri(l){
+  const m=String(l).match(/\b(season|batch|bulan|seri|part|bagian)\s*#?\s*(\d+)/i);
+  if(!m) return '';
+  const kata=m[1].toLowerCase();
+  return kata.charAt(0).toUpperCase()+kata.slice(1)+' '+m[2];
+}
+/* Buang hiasan markdown tanpa menyentuh kata-katanya. */
+function bersihkanBaris(l){
+  return String(l).replace(/\*\*/g,'').replace(/__/g,'').replace(/^>\s?/,'').replace(/[ \t]+$/,'');
+}
+const garisHias=l=>/^\s*([-*_])(\s*\1){2,}\s*$/.test(l);
+
 function uraikanMD(teks){
   const baris=String(teks||'').replace(/\r\n?/g,'\n').split('\n');
-  let seri='';
-  for(const l of baris){
-    if(l.indexOf('# ')===0){
-      const m=l.match(/season\s*(\d+)/i)||l.match(/bulan\s*(\d+)/i);
-      if(m) seri=(/season/i.test(l)?'Season ':'Bulan ')+m[1];
-      break;
-    }
-  }
+  let seriUmum='', seriKini='';
   const item=[]; let cur=null;
-  const tutup=()=>{ if(cur){ cur.mentah=cur.buf.join('\n').trim(); delete cur.buf; if(cur.mentah) item.push(cur); cur=null; } };
+
+  const tutup=()=>{
+    if(!cur) return;
+    cur.mentah=cur.buf.join('\n').replace(/\n{3,}/g,'\n\n').trim();
+    delete cur.buf;
+    if(cur.mentah) item.push(cur);
+    cur=null;
+  };
+
   baris.forEach(l=>{
-    const h=l.match(/^#{2,3}\s*SCRIPT\s*#?\s*(\d+)\s*[—–:-]?\s*(.*)$/i);
-    if(h){
+    const k=kepalaNomor(l);
+    if(k){
       tutup();
-      let sisa=(h[2]||'').trim(), hari='', judul=sisa;
+      let sisa=bersihkanBaris(k.sisa).trim(), hari='', judul=sisa;
       const mh=sisa.match(/^Hari\s+([0-9\u2013\u2014-]+)\s*(.*)$/i);
       if(mh){ hari=mh[1].replace(/[\u2013\u2014]/g,'-'); judul=(mh[2]||'').trim(); }
       judul=judul.replace(/^\(([\s\S]*)\)$/,'$1').trim();
-      cur={nomor:Number(h[1]),hari:hari,judul:judul,buf:[]};
+      cur={nomor:k.nomor,hari:hari,judul:judul,seri:seriKini,buf:[]};
       return;
     }
-    if(/^#{1,6}\s/.test(l)){ tutup(); return; }
+    // Judul bagian yang bukan script: tutup blok, catat serinya.
+    if(/^#{1,6}\s/.test(l)){
+      tutup();
+      const s=labelSeri(l);
+      if(s){ seriKini=s; if(!seriUmum) seriUmum=s; }
+      return;
+    }
+    // Penanda "<!-- Status: … -->" dari ekspor Meja Kerja.
     if(/^\s*<!--[\s\S]*-->\s*$/.test(l)){
-      // penanda dari ekspor: "<!-- Tab: X · Status: Sudah dibuat -->"
       const ms=l.match(/Status:\s*([^·\-]+?)\s*(?:·|-->)/i);
       if(ms&&cur) cur.status=labelKeStatus(ms[1]);
       return;
     }
-    if(cur){ if(/^-{3,}\s*$/.test(l)){ tutup(); return; } cur.buf.push(l); }
+    if(!cur) return;
+    if(garisHias(l)) return;              // "---" cuma hiasan, bukan akhir script
+    cur.buf.push(bersihkanBaris(l));
   });
   tutup();
-  return {seri:seri,item:item};
+  return {seri:seriUmum,item:item};
 }
 function pisahHook(mentah){
   const blok=String(mentah).split(/\n[ \t]*\n/);
@@ -2128,7 +2181,7 @@ function segarkanImpor(){
 
   if(!total){
     kotak.textContent=imporSumber.length||$('#imp-teks').value.trim()
-      ? 'Tidak terbaca. Untuk Markdown perlu pola "## SCRIPT <nomor>"; TSV perlu baris kepala yang memuat kolom Judul.'
+      ? 'Tidak menemukan satu pun nomor script. Pastikan tiap script diawali baris bernomor seperti "## SCRIPT 12" atau "## 12 — Judul". Untuk TSV, baris kepalanya harus memuat kolom Judul.'
       : 'Belum ada file atau tempelan.';
     $('#imp-jalan').textContent='Impor';
     return;
@@ -2139,7 +2192,7 @@ function segarkanImpor(){
   imporSumber.forEach(s=>{
     const seri=paksa||s.seri||'';
     const isi=s.item.map(it=>{
-      const seriIt=paksa||(it.rec&&it.rec.seri)||s.seri||'';
+      const seriIt=paksa||(it.rec&&it.rec.seri)||it.seri||s.seri||'';
       const kunci=grup+'||'+seriIt+'#'+it.nomor;
       const dobel=lewati&&(dipakai.has(kunci)||sudahAdaNomor(it.nomor,seriIt,grup));
       if(!dobel){ baru++; dipakai.add(kunci); }
@@ -2196,7 +2249,7 @@ $('#imp-jalan').onclick=()=>{
   imporSumber.forEach(s=>{
     const seri=paksa||s.seri||'';
     s.item.forEach(it=>{
-      const seriIt=paksa||(it.rec&&it.rec.seri)||s.seri||'';
+      const seriIt=paksa||(it.rec&&it.rec.seri)||it.seri||s.seri||'';
       const kunci=grup+'||'+seriIt+'#'+it.nomor;
       if(lewati&&(dipakai.has(kunci)||sudahAdaNomor(it.nomor,seriIt,grup))){ lewat++; return; }
       dipakai.add(kunci);
