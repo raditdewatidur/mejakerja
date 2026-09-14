@@ -455,7 +455,7 @@ details.help .in{padding:0 15px 15px}
       <label><span class="l">Masukkan ke tab</span><select id="imp-tab"></select></label>
       <div class="hint">Pilih tab tujuan untuk script yang diimpor. Tambah tab baru di halaman Script.</div>
       <label class="opt"><input type="checkbox" id="imp-pisah" checked>Paragraf pertama jadi hook, sisanya jadi isi</label>
-      <label class="opt"><input type="checkbox" id="imp-lewati" checked>Lewati nomor yang sudah ada di seri yang sama</label>
+      <label class="opt"><input type="checkbox" id="imp-lewati" checked>Lewati nomor yang sudah ada di tab &amp; seri yang sama</label>
     </div>
     <div>
       <span class="l" style="font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:5px">Pratinjau</span>
@@ -1962,6 +1962,17 @@ function rakitScript(it,seri,pisah,status,grup){
   };
 }
 
+/* Duplikat hanya dihitung DI DALAM tab tujuan. Nomor 1 di "Season 5"
+   tidak bentrok dengan nomor 1 di "Season 4" — itu memang dua daftar
+   yang berbeda. */
+function sudahAdaNomor(nomor,seri,grup){
+  const g=String(grup||'');
+  return DB.script.some(x=>
+    Number(x.nomor)===Number(nomor)
+    && String(x.seri||'')===String(seri||'')
+    && String(x.grup||'')===g);
+}
+
 let imporSumber=[];   // {id,nama,seri,item[]}
 
 function bacaBerkas(f){
@@ -1998,6 +2009,7 @@ function segarkanImpor(){
   segarkanBerkas();
   const paksa=$('#imp-seri').value.trim();
   const pisah=$('#imp-pisah').checked, lewati=$('#imp-lewati').checked;
+  const grup=$('#imp-tab')?($('#imp-tab').value||''):'';
   const kotak=$('#imp-pratinjau');
   const total=imporSumber.reduce((a,s)=>a+s.item.length,0);
 
@@ -2014,10 +2026,10 @@ function segarkanImpor(){
   imporSumber.forEach(s=>{
     const seri=paksa||s.seri||'';
     const isi=s.item.map(it=>{
-      const kunci=seri+'#'+it.nomor;
-      const dobel=lewati&&(dipakai.has(kunci)||DB.script.some(x=>Number(x.nomor)===it.nomor&&String(x.seri||'')===seri));
+      const kunci=grup+'||'+seri+'#'+it.nomor;
+      const dobel=lewati&&(dipakai.has(kunci)||sudahAdaNomor(it.nomor,seri,grup));
       if(!dobel){ baru++; dipakai.add(kunci); }
-      const sc=rakitScript(it,seri,pisah,'belum','');
+      const sc=rakitScript(it,seri,pisah,'belum',grup);
       const cuplik=(sc.hook||sc.isi).split('\n').slice(0,2).join(' / ');
       return '<div style="margin-bottom:8px'+(dobel?';opacity:.35':'')+'">'
         +'<span style="color:var(--brass)">'+String(it.nomor).padStart(2,'0')+'</span> '
@@ -2045,7 +2057,8 @@ $('#imp-teks').addEventListener('input',()=>{
   pasangSumber('tempel','Tempelan',$('#imp-teks').value);
   segarkanImpor();
 });
-['#imp-seri','#imp-pisah','#imp-lewati'].forEach(s=>$(s).addEventListener('input',segarkanImpor));
+['#imp-seri','#imp-pisah','#imp-lewati','#imp-tab'].forEach(s=>$(s).addEventListener('input',segarkanImpor));
+$('#imp-tab').addEventListener('change',segarkanImpor);
 $('#imp-pilih').onclick=()=>$('#file-md').click();
 $('#file-md').onchange=async e=>{
   const daftar=Array.prototype.slice.call(e.target.files);
@@ -2069,8 +2082,8 @@ $('#imp-jalan').onclick=()=>{
   imporSumber.forEach(s=>{
     const seri=paksa||s.seri||'';
     s.item.forEach(it=>{
-      const kunci=seri+'#'+it.nomor;
-      if(lewati&&(dipakai.has(kunci)||DB.script.some(x=>Number(x.nomor)===it.nomor&&String(x.seri||'')===seri))){ lewat++; return; }
+      const kunci=grup+'||'+seri+'#'+it.nomor;
+      if(lewati&&(dipakai.has(kunci)||sudahAdaNomor(it.nomor,seri,grup))){ lewat++; return; }
       dipakai.add(kunci);
       DB.script.push(rakitScript(it,seri,pisah,status,grup)); masuk++;
     });
