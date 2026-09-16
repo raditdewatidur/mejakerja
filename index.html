@@ -1008,17 +1008,35 @@ async function tarikDariSheet(){
   }catch(err){ pillSinkron('bad','Gagal tarik'); toast(err.message); }
 }
 
-$('#sync-pill').onclick=()=>{ if(!tersambung()) gotoTab('data'); else sinkronkan(false); };
+$('#sync-pill').onclick=()=>{
+  if(!tersambung()) return gotoTab('data');
+  if(!sudahTarik){ modeOffline=false; return bukaGerbang(); }   // perangkat ini belum pernah menyamakan
+  sinkronkan(false);
+};
 $('#s-save').onclick=()=>{
+  const urlLama=DB.settings.url, tokenLama=DB.settings.token;
   DB.settings.url=$('#s-url').value.trim(); DB.settings.token=$('#s-token').value.trim();
   DB.settings.auto=$('#s-auto').checked; DB.settings.publik=$('#s-publik').checked;
   DB.settings.bahasaOCR=$('#s-ocr').value; DB.settings.tinjauOCR=$('#s-tinjau').checked;
-  tulis(DB); segarkanPill(); toast(tersambung()?'Sambungan tersimpan.':'Alamat atau token masih kosong.');
+  tulis(DB);
+  if(!tersambung()){ segarkanPill(); toast('Alamat atau token masih kosong.'); return; }
+  // Sambungan baru atau berubah: langsung tarik, jangan tunggu dipencet.
+  // Tanpa ini, perangkat baru menyimpan alamatnya tapi layarnya tetap kosong.
+  const berubah=(DB.settings.url!==urlLama||DB.settings.token!==tokenLama);
+  if(berubah||!sudahTarik){ sudahTarik=false; modeOffline=false; bukaGerbang(); return; }
+  segarkanPill(); toast('Sambungan tersimpan.');
 };
 $('#s-test').onclick=async()=>{
+  const urlLama=DB.settings.url, tokenLama=DB.settings.token;
   DB.settings.url=$('#s-url').value.trim(); DB.settings.token=$('#s-token').value.trim(); tulis(DB);
   pillSinkron('wait','Menguji…');
-  try{ const j=await panggil('ping'); toast('Tersambung. Folder: '+j.folder); segarkanPill(); }
+  try{
+    const j=await panggil('ping');
+    toast('Tersambung. Folder: '+j.folder);
+    const berubah=(DB.settings.url!==urlLama||DB.settings.token!==tokenLama);
+    if(berubah||!sudahTarik){ sudahTarik=false; modeOffline=false; bukaGerbang(); }
+    else segarkanPill();
+  }
   catch(e){ pillSinkron('bad','Gagal'); toast(e.message); }
 };
 $('#s-push').onclick=()=>{ ['testi','customer','script'].forEach(k=>DB[k].forEach(x=>x.perlu=1)); sinkronkan(false); };
