@@ -1382,7 +1382,7 @@ function bukaForm(tipe,id){
     if(f.t==='textarea') h+='<textarea id="f-'+f.k+'" rows="'+(f.rows||4)+'" placeholder="'+esc(f.ph||'')+'">'+esc(v)+'</textarea>';
     else if(f.t==='select') h+='<select id="f-'+f.k+'">'+f.opt.map(o=>'<option'+(o===v?' selected':'')+'>'+esc(o)+'</option>').join('')+'</select>';
     else if(f.t==='status') h+='<select id="f-status">'+Object.keys(STATUS).map(k=>'<option value="'+k+'"'+(k===(v||'belum')?' selected':'')+'>'+STATUS[k].label+'</option>').join('')+'</select>';
-    else if(f.t==='grup') h+='<select id="f-grup"><option value="">(Tanpa tab)</option>'+(DB.settings.scriptTabs||[]).map(g=>'<option'+(g===v?' selected':'')+'>'+esc(g)+'</option>').join('')+'</select>';
+    else if(f.t==='grup') h+='<select id="f-grup"><option value="">(Tanpa tab)</option>'+scriptTabList().map(g=>'<option'+(g===v?' selected':'')+'>'+esc(g)+'</option>').join('')+'</select>';
     else h+='<input type="'+f.t+'" id="f-'+f.k+'" value="'+esc(v)+'" placeholder="'+esc(f.ph||'')+'">';
     h+='</label>';
     if(grid&&(!nx||!nx.half)){ h+='</div>'; grid=false; }
@@ -1458,7 +1458,26 @@ function renderCustomer(){
 }
 
 /* ===================== SCRIPT TABS ===================== */
-function scriptTabList(){ return DB.settings.scriptTabs||[]; }
+/* Daftar nama tab disimpan di settings, dan settings TIDAK ikut
+   dikirim ke Sheet — yang tersinkron cuma kolom "grup" di tiap script.
+   Jadi daftar tab selalu dibangun ulang dari datanya sendiri dulu:
+   nama tab apa pun yang terbawa lewat sinkron langsung muncul di
+   perangkat mana pun, tanpa perlu memulihkan cadangan. */
+function gabungTabDariData(){
+  const ada=DB.settings.scriptTabs||[];
+  const punya={}; ada.forEach(g=>punya[g]=1);
+  const temuan=[];
+  DB.script.forEach(s=>{
+    const g=String(s.grup||'').trim();
+    if(g&&!punya[g]){ punya[g]=1; temuan.push(g); }
+  });
+  if(!temuan.length) return false;
+  temuan.sort((a,b)=>a.localeCompare(b,'id'));
+  DB.settings.scriptTabs=ada.concat(temuan);
+  tulis(DB);
+  return true;
+}
+function scriptTabList(){ gabungTabDariData(); return DB.settings.scriptTabs||[]; }
 function scriptTabAktif(){ return DB.settings.scriptTabAktif||''; }
 
 function renderScriptTabs(){
@@ -2271,7 +2290,7 @@ function segarkanImpor(){
 
 $('#impor-md').onclick=()=>{
   $('#imp-status').innerHTML=Object.keys(STATUS).map(k=>'<option value="'+k+'">'+STATUS[k].label+'</option>').join('');
-  const tabs=DB.settings.scriptTabs||[];
+  const tabs=scriptTabList();
   const aktif=scriptTabAktif();
   $('#imp-tab').innerHTML='<option value="">(Tanpa tab)</option>'+tabs.map(g=>'<option value="'+esc(g)+'"'+(g===aktif&&aktif!==''&&aktif!=='__tanpa__'?' selected':'')+'>'+esc(g)+'</option>').join('');
   $('#scrim-impor').classList.add('on');
