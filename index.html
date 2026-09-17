@@ -556,8 +556,10 @@ details.help .in{padding:0 15px 15px}
     <div class="bar" style="margin:18px 0 14px"><i id="gerbang-bar" style="width:35%"></i></div>
     <p id="gerbang-pesan">Menyamakan data dengan Google Sheet…</p>
     <p class="hint" id="gerbang-rinci" style="margin-top:6px">&nbsp;</p>
+    <pre id="gerbang-log" hidden style="text-align:left;font-family:var(--mono);font-size:11px;line-height:1.55;color:var(--dim);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:14px;max-height:230px;overflow:auto;white-space:pre-wrap;word-break:break-word"></pre>
     <div class="row" id="gerbang-aksi" hidden style="justify-content:center;margin-top:18px">
       <button class="btn primary" id="gerbang-ulang">Coba lagi</button>
+      <button class="btn" id="gerbang-salin">Salin catatan</button>
       <button class="btn" id="gerbang-offline">Buka tanpa sinkron</button>
     </div>
   </div>
@@ -849,23 +851,62 @@ function segarkanPill(){
 function antreSinkron(){ if(!tersambung()||jedaSinkron) return segarkanPill();
   clearTimeout(sinkronTimer); sinkronTimer=setTimeout(()=>sinkronkan(true),2500); segarkanPill(); }
 
+/* ---- catatan langkah, supaya kegagalan sinkron bisa dilihat ---- */
+let jejak=[], jejakMulai=0;
+function jejakBaru(){ jejak=[]; jejakMulai=Date.now(); }
+function catat(pesan){
+  const d=((Date.now()-jejakMulai)/1000).toFixed(1);
+  jejak.push('['+d+'s] '+pesan);
+  const el=$('#gerbang-log');
+  if(el&&!$('#gerbang').hidden){ el.hidden=false; el.textContent=jejak.join('\n'); el.scrollTop=el.scrollHeight; }
+}
+/* Apps Script mengalihkan /exec ke googleusercontent.com. Kalau
+   deployment-nya disetel "Anyone with Google account", pengunjung yang
+   belum masuk akun akan menerima halaman login, bukan JSON. Di
+   perangkat sehari-hari ini tak terasa karena akunnya sudah masuk;
+   di jendela penyamaran barulah ketahuan. */
+function bacaKegagalan(teks,status){
+  const t=String(teks||'');
+  if(/accounts\.google\.com|ServiceLogin|id="?gaia/i.test(t))
+    return 'Google meminta login, bukan mengirim data. Di Apps Script buka Deploy > Manage deployments > pensil, '
+         + 'lalu setel "Who has access" menjadi Anyone (bukan "Anyone with Google account"), simpan sebagai New version.';
+  if(/Authorization is required|requires authorization/i.test(t))
+    return 'Skripnya belum diberi izin. Di editor Apps Script jalankan fungsi beriIzin sekali, setujui, lalu deploy versi baru.';
+  if(/Script function not found|doPost/i.test(t))
+    return 'URL-nya sampai ke Apps Script, tapi fungsi doPost tidak ada. Pastikan seluruh isi Code.gs sudah ditempel.';
+  if(/<html/i.test(t))
+    return 'Yang kembali halaman web, bukan data. Biasanya URL-nya bukan yang berakhiran /exec, atau deployment-nya belum diperbarui.';
+  if(status&&status>=400) return 'Server membalas dengan kode '+status+'.';
+  return 'Balasan tidak terbaca sebagai data.';
+}
+
 async function panggil(action,body,ms){
   const url=String(DB.settings.url).trim();
+  if(!/^https:\/\/script\.google\.com\/.+\/exec$/.test(url))
+    catat('Peringatan: alamatnya tidak berbentuk https://script.google.com/…/exec');
   const muatan=Object.assign({action:action,token:DB.settings.token},body||{});
   let ac=null,jam=null;
   try{ ac=new AbortController(); jam=setTimeout(()=>ac.abort(),ms||120000); }catch(e){ ac=null; }
   let r;
+  catat('Mengirim perintah "'+action+'" ke Apps Script…');
   try{
     r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify(muatan),redirect:'follow',signal:ac?ac.signal:undefined});
   }catch(e){
-    if(e&&e.name==='AbortError') throw new Error('Waktu tunggu habis. Apps Script atau jaringan sedang lambat.');
-    throw new Error('Tidak bisa menghubungi Apps Script. Cek koneksi.');
+    if(e&&e.name==='AbortError'){ catat('Gagal: waktu tunggu habis.'); throw new Error('Waktu tunggu habis. Apps Script atau jaringan sedang lambat.'); }
+    catat('Gagal menghubungi: '+(e&&e.message||e));
+    throw new Error('Tidak bisa menghubungi Apps Script. Cek koneksi, dan pastikan alamatnya berakhiran /exec. ('+(e&&e.message||e)+')');
   }finally{ if(jam) clearTimeout(jam); }
+
   const teks=await r.text();
+  catat('Dibalas: kode '+r.status+', '+teks.length+' karakter.');
   let j; try{ j=JSON.parse(teks); }
-  catch(e){ throw new Error('Balasan tidak terbaca. Pastikan URL berakhiran /exec dan aksesnya disetel Anyone.'); }
-  if(!j.ok) throw new Error(j.error||'Gagal.');
+  catch(e){
+    const sebab=bacaKegagalan(teks,r.status);
+    catat('Isi balasan bukan data. Cuplikan: '+teks.slice(0,180).replace(/\s+/g,' '));
+    throw new Error(sebab);
+  }
+  if(!j.ok){ catat('Apps Script menolak: '+(j.error||'tanpa keterangan')); throw new Error(j.error||'Gagal.'); }
   return j;
 }
 const tidur=ms=>new Promise(r=>setTimeout(r,ms));
@@ -931,7 +972,10 @@ function tampilGerbang(pesan,rinci,aksi){
 }
 async function bukaGerbang(){
   if(!tersambung()){ $('#gerbang').hidden=true; return; }   // lokal saja, tak ada yang bertabrakan
+  jejakBaru();
+  $('#gerbang-log').hidden=true; $('#gerbang-log').textContent='';
   tampilGerbang('Menyamakan data dengan Google Sheet…','Sebentar, supaya tidak bertabrakan dengan perangkat lain.',false);
+  catat('Perangkat ini ' + (DB.script.length+DB.testi.length+DB.customer.length ? 'sudah punya data lokal.' : 'masih kosong, semuanya akan diambil dari Sheet.'));
   try{
     const r=await tarikGabung();
     sudahTarik=true; modeOffline=false;
@@ -939,11 +983,21 @@ async function bukaGerbang(){
     $('#gerbang').hidden=true;
     if(r.tambah||r.perbarui||r.buang)
       toast('Data disamakan: '+r.tambah+' baru, '+r.perbarui+' diperbarui, '+r.buang+' dibuang.');
+    else toast('Sudah sama dengan Sheet. Tidak ada yang berubah.');
     antreSinkron();
   }catch(e){
-    tampilGerbang('Belum bisa menyamakan data',esc(e.message),true);
+    catat('Berhenti: '+(e&&e.message||e));
+    tampilGerbang('Belum bisa menyamakan data',esc(e&&e.message||String(e)),true);
+    $('#gerbang-log').hidden=false;
+    $('#gerbang-log').textContent=jejak.join('\n');
   }
 }
+$('#gerbang-salin').onclick=()=>{
+  const u=String(DB.settings.url||'');
+  salinPolos('Meja Kerja — catatan sinkron\nAlamat: '+(u?u.replace(/\/[^/]+\/exec$/,'/…/exec'):'(kosong)')
+    +'\nToken terisi: '+(DB.settings.token?'ya':'tidak')+'\n\n'+jejak.join('\n'));
+  toast('Catatan tersalin.');
+};
 $('#gerbang-ulang').onclick=bukaGerbang;
 $('#gerbang-offline').onclick=()=>{
   modeOffline=true; sudahTarik=false;
@@ -964,6 +1018,9 @@ let sudahTarik=false, modeOffline=false, tarikTerakhir=0;
 async function tarikGabung(){
   const j=await panggil('pull',null,180000);
   const masuk=j.data||{}, mati=j.hapus||{};
+  catat('Isi Sheet: '+(masuk.testi||[]).length+' testi, '+(masuk.customer||[]).length+' customer, '+(masuk.script||[]).length+' script.');
+  const tabJauh=[]; (masuk.script||[]).forEach(s=>{ const g=String(s.grup||'').trim(); if(g&&tabJauh.indexOf(g)<0) tabJauh.push(g); });
+  catat(tabJauh.length?('Nama tab yang terbawa: '+tabJauh.join(', ')) : 'Tidak ada nama tab di kolom grup. Kalau harusnya ada, Code.gs di Apps Script belum versi yang punya kolom grup.');
   let tambah=0,perbarui=0,buang=0;
 
   ['testi','customer','script'].forEach(k=>{
@@ -994,6 +1051,9 @@ async function tarikGabung(){
   rapikanNomorScript();
   tarikTerakhir=Date.now();
   tulis(DB);
+  gabungTabDariData();
+  catat('Digabung: '+tambah+' baru, '+perbarui+' diperbarui, '+buang+' dibuang.');
+  catat('Tab script di perangkat ini sekarang: '+((DB.settings.scriptTabs||[]).join(', ')||'belum ada'));
   return {tambah,perbarui,buang};
 }
 
@@ -1030,6 +1090,7 @@ $('#s-test').onclick=async()=>{
   const urlLama=DB.settings.url, tokenLama=DB.settings.token;
   DB.settings.url=$('#s-url').value.trim(); DB.settings.token=$('#s-token').value.trim(); tulis(DB);
   pillSinkron('wait','Menguji…');
+  jejakBaru();
   try{
     const j=await panggil('ping');
     toast('Tersambung. Folder: '+j.folder);
@@ -1037,7 +1098,13 @@ $('#s-test').onclick=async()=>{
     if(berubah||!sudahTarik){ sudahTarik=false; modeOffline=false; bukaGerbang(); }
     else segarkanPill();
   }
-  catch(e){ pillSinkron('bad','Gagal'); toast(e.message); }
+  catch(e){
+    pillSinkron('bad','Gagal');
+    catat('Berhenti: '+(e&&e.message||e));
+    tampilGerbang('Uji sambungan gagal',esc(e&&e.message||String(e)),true);
+    $('#gerbang-log').hidden=false;
+    $('#gerbang-log').textContent=jejak.join('\n');
+  }
 };
 $('#s-push').onclick=()=>{ ['testi','customer','script'].forEach(k=>DB[k].forEach(x=>x.perlu=1)); sinkronkan(false); };
 $('#s-pull').onclick=tarikDariSheet;
