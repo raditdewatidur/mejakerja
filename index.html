@@ -1026,7 +1026,12 @@ let sudahTarik=false, modeOffline=false, tarikTerakhir=0;
 
 async function tarikGabung(){
   const j=await panggil('pull',null,180000);
-  const masuk=j.data||{}, mati=j.hapus||{};
+  /* Deployment lama membungkus hasilnya dua lapis: { data: { data, hapus } }.
+     Yang baru mengirimnya rata: { data, hapus }. Terima keduanya, supaya
+     aplikasi ini tetap jalan dengan Apps Script versi mana pun. */
+  const bungkus=(j.data&&(j.data.data||j.data.hapus))?j.data:j;
+  if(bungkus!==j) catat('Balasan berbentuk lama (dua lapis) — tetap dibaca.');
+  const masuk=bungkus.data||{}, mati=bungkus.hapus||{};
   catat('Isi Sheet: '+(masuk.testi||[]).length+' testi, '+(masuk.customer||[]).length+' customer, '+(masuk.script||[]).length+' script.');
   const tabJauh=[]; (masuk.script||[]).forEach(s=>{ const g=String(s.grup||'').trim(); if(g&&tabJauh.indexOf(g)<0) tabJauh.push(g); });
   catat(tabJauh.length?('Nama tab yang terbawa: '+tabJauh.join(', ')) : 'Tidak ada nama tab di kolom grup. Kalau harusnya ada, Code.gs di Apps Script belum versi yang punya kolom grup.');
